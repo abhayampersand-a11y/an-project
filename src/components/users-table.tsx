@@ -176,7 +176,7 @@ export function UsersTable({ users: initialUsers }: { users: User[] }) {
                 <Label htmlFor="u-role">Role</Label>
                 <Select
                   value={form.role}
-                  onValueChange={(v) => setForm((f) => ({ ...f, role: v ?? f.role }))}
+                  onValueChange={(v) => { if (v) setForm((f) => ({ ...f, role: v })) }}
                   items={[
                     { label: "User", value: "User" },
                     { label: "Admin", value: "Admin" },
@@ -199,7 +199,7 @@ export function UsersTable({ users: initialUsers }: { users: User[] }) {
                 <Label htmlFor="u-status">Status</Label>
                 <Select
                   value={form.status}
-                  onValueChange={(v) => setForm((f) => ({ ...f, status: v ?? f.status }))}
+                  onValueChange={(v) => { if (v) setForm((f) => ({ ...f, status: v })) }}
                   items={[
                     { label: "Active", value: "Active" },
                     { label: "Inactive", value: "Inactive" },
