@@ -3,11 +3,31 @@ import { ChartAreaInteractive } from "@/components/chart-area-interactive"
 import { DataTable } from "@/components/data-table"
 import { SectionCards } from "@/components/section-cards"
 import { SiteHeader } from "@/components/site-header"
+import { UsersTable } from "@/components/users-table"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
+import { query } from "@/lib/db"
 
 import data from "./data.json"
 
-export default function Page() {
+async function getUsers() {
+  try {
+    const result = await query<{
+      id: number
+      name: string
+      email: string
+      role: string
+      status: string
+      created_at: string
+    }>("SELECT id, name, email, role, status, created_at FROM users ORDER BY id")
+    return result.rows
+  } catch {
+    return []
+  }
+}
+
+export default async function Page() {
+  const users = await getUsers()
+
   return (
     <SidebarProvider
       style={
@@ -27,6 +47,7 @@ export default function Page() {
               <div className="px-4 lg:px-6">
                 <ChartAreaInteractive />
               </div>
+              <UsersTable users={users} />
               <DataTable data={data} />
             </div>
           </div>
