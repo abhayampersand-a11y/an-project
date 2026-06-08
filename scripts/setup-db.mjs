@@ -58,11 +58,43 @@ CREATE TABLE IF NOT EXISTS cities (
   status     VARCHAR(20) DEFAULT 'Active',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS items (
+  id         SERIAL PRIMARY KEY,
+  item_name  VARCHAR(150) NOT NULL,
+  status     VARCHAR(20) DEFAULT 'Active',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS payments (
+  id         SERIAL PRIMARY KEY,
+  bill_type  VARCHAR(10) NOT NULL DEFAULT 'Credit',
+  party      VARCHAR(150) NOT NULL,
+  pay_date   DATE NOT NULL DEFAULT CURRENT_DATE,
+  fine       NUMERIC(14,3) DEFAULT 0,
+  rs         NUMERIC(14,2) DEFAULT 0,
+  remark     TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS parties (
+  id             SERIAL PRIMARY KEY,
+  party_name     VARCHAR(150) NOT NULL,
+  mobile         VARCHAR(20),
+  address        TEXT,
+  opening_fine   NUMERIC(14,3) DEFAULT 0,
+  opening_amount NUMERIC(14,2) DEFAULT 0,
+  city           VARCHAR(100),
+  party_type     VARCHAR(50) NOT NULL DEFAULT 'Vepari',
+  state          VARCHAR(100),
+  status         VARCHAR(20) DEFAULT 'Active',
+  created_at     TIMESTAMPTZ DEFAULT NOW()
+);
 `;
 
 try {
   await pool.query(SQL);
-  console.log("✅ Database setup complete. Tables ready: users, states, cities");
+  console.log("✅ Database setup complete. Tables ready: users, states, cities, items, parties, payments");
 } catch (err) {
   console.error("❌ Setup failed:", err.message);
   process.exit(1);

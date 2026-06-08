@@ -16,6 +16,7 @@ import {
 } from "lucide-react"
 
 import { NavUser } from "@/components/nav-user"
+import { OmCastingLogo } from "@/components/om-casting-logo"
 import {
   Sidebar,
   SidebarContent,
@@ -53,12 +54,12 @@ const navItems: NavItem[] = [
   },
   {
     title: "Party",
-    url: "#",
+    url: "/dashboard/party",
     icon: <UsersIcon />,
   },
   {
     title: "Item",
-    url: "#",
+    url: "/dashboard/item",
     icon: <PackageIcon />,
   },
   {
@@ -73,7 +74,7 @@ const navItems: NavItem[] = [
   },
   {
     title: "Payment",
-    url: "#",
+    url: "/dashboard/payment",
     icon: <IndianRupeeIcon />,
   },
   {
@@ -196,9 +197,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:p-1.5! h-auto"
               render={<a href="/dashboard" />}
             >
-              <span className="text-lg font-black tracking-widest uppercase text-foreground">
-                Om Casting
-              </span>
+              <OmCastingLogo
+                className="text-sidebar-foreground [&>svg]:size-10"
+                wordmarkClassName="text-2xl"
+              />
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

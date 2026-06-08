@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { login, type LoginState } from "./actions";
+import { OmCastingLogo } from "@/components/om-casting-logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -33,10 +34,8 @@ export default function LoginPage() {
 
       <div className="w-full max-w-md">
         {/* logo / brand */}
-        <div className="mb-8 text-center">
-          <div className="mb-3 inline-flex size-16 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
-            <span className="text-2xl font-black tracking-tight">OC</span>
-          </div>
+        <div className="mb-8 flex flex-col items-center text-center">
+          <OmCastingLogo showWordmark={false} className="mb-3 [&>svg]:size-20 [&>svg]:shadow-lg [&>svg]:rounded-2xl" />
           <h1 className="text-3xl font-black tracking-tight text-foreground">
             Om Casting
           </h1>
