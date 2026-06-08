@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls scripts *)",
+      "Bash(node -e \"console.log\\('node ok'\\)\")",
+      "Bash(npm run *)",
+      "Bash(node -e \"const p=require\\('@base-ui/react/package.json'\\); console.log\\('version', p.version\\); console.log\\(Object.keys\\(require\\('@base-ui/react'\\)\\).slice\\(0,50\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(node -e \"console.log\\(Object.keys\\(require\\('@base-ui/react/alert-dialog'\\).AlertDialog\\).join\\('\\\\n'\\)\\)\")",
+      "Bash(node -e \"const fs=require\\('fs'\\);const d=fs.readFileSync\\('node_modules/@base-ui/react/alert-dialog/index.d.ts','utf8'\\);console.log\\(d.slice\\(0,1200\\)\\)\")",
+      "Bash(node -e \"const fs=require\\('fs'\\);const d=fs.readFileSync\\('node_modules/@base-ui/react/alert-dialog/root/AlertDialogRoot.d.ts','utf8'\\);console.log\\(d\\)\")",
+      "Bash(findstr /V \"Warning version major libpq sslmode prepare current explicitly compatibility trace\")"
+    ]
+  }
+}

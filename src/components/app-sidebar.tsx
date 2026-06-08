@@ -1,10 +1,20 @@
 "use client"
 
 import * as React from "react"
+import { usePathname } from "next/navigation"
+import {
+  LayoutDashboardIcon,
+  Settings2Icon,
+  UsersIcon,
+  PackageIcon,
+  FileTextIcon,
+  IndianRupeeIcon,
+  BookOpenIcon,
+  ArchiveIcon,
+  HardDriveIcon,
+  ChevronRightIcon,
+} from "lucide-react"
 
-import { NavDocuments } from "@/components/nav-documents"
-import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
@@ -14,190 +24,196 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar"
-import { LayoutDashboardIcon, ListIcon, ChartBarIcon, FolderIcon, UsersIcon, CameraIcon, FileTextIcon, Settings2Icon, CircleHelpIcon, SearchIcon, DatabaseIcon, FileChartColumnIcon, FileIcon, CommandIcon } from "lucide-react"
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "#",
-      icon: (
-        <LayoutDashboardIcon
-        />
-      ),
-    },
-    {
-      title: "Lifecycle",
-      url: "#",
-      icon: (
-        <ListIcon
-        />
-      ),
-    },
-    {
-      title: "Analytics",
-      url: "#",
-      icon: (
-        <ChartBarIcon
-        />
-      ),
-    },
-    {
-      title: "Projects",
-      url: "#",
-      icon: (
-        <FolderIcon
-        />
-      ),
-    },
-    {
-      title: "Team",
-      url: "#",
-      icon: (
-        <UsersIcon
-        />
-      ),
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: (
-        <CameraIcon
-        />
-      ),
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: (
-        <FileTextIcon
-        />
-      ),
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: (
-        <FileTextIcon
-        />
-      ),
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: (
-        <Settings2Icon
-        />
-      ),
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: (
-        <CircleHelpIcon
-        />
-      ),
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: (
-        <SearchIcon
-        />
-      ),
-    },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: (
-        <DatabaseIcon
-        />
-      ),
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: (
-        <FileChartColumnIcon
-        />
-      ),
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: (
-        <FileIcon
-        />
-      ),
-    },
-  ],
+type NavItem = {
+  title: string
+  url: string
+  icon: React.ReactNode
+  children?: { title: string; url: string }[]
 }
+
+const navItems: NavItem[] = [
+  {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: <LayoutDashboardIcon />,
+  },
+  {
+    title: "Setting",
+    url: "#",
+    icon: <Settings2Icon />,
+    children: [
+      { title: "City",  url: "/dashboard/setting/city" },
+      { title: "State", url: "/dashboard/setting/state" },
+    ],
+  },
+  {
+    title: "Party",
+    url: "#",
+    icon: <UsersIcon />,
+  },
+  {
+    title: "Item",
+    url: "#",
+    icon: <PackageIcon />,
+  },
+  {
+    title: "Invoice",
+    url: "#",
+    icon: <FileTextIcon />,
+    children: [
+      { title: "Javak",  url: "#" },
+      { title: "Aavak",  url: "#" },
+      { title: "Garanu", url: "#" },
+    ],
+  },
+  {
+    title: "Payment",
+    url: "#",
+    icon: <IndianRupeeIcon />,
+  },
+  {
+    title: "Ledger",
+    url: "#",
+    icon: <BookOpenIcon />,
+    children: [
+      { title: "Party Tareej",    url: "#" },
+      { title: "RS Rojmed",       url: "#" },
+      { title: "Casting",         url: "#" },
+      { title: "Fine Rojmed",     url: "#" },
+      { title: "Fine Daily Rojmed", url: "#" },
+      { title: "RS Daily Rojmed", url: "#" },
+      { title: "Final Report",    url: "#" },
+    ],
+  },
+  {
+    title: "Manage",
+    url: "#",
+    icon: <ArchiveIcon />,
+    children: [
+      { title: "Account", url: "#" },
+    ],
+  },
+  {
+    title: "Backup",
+    url: "#",
+    icon: <HardDriveIcon />,
+    children: [
+      { title: "Javak", url: "#" },
+      { title: "Aavak", url: "#" },
+    ],
+  },
+]
+
+const user = {
+  name: "Admin",
+  email: "admin@omcasting.com",
+  avatar: "",
+}
+
+function NavItem({ item, pathname }: { item: NavItem; pathname: string }) {
+  const isActive = item.url !== "#" && pathname === item.url
+  const hasChildren = item.children && item.children.length > 0
+  const childActive = !!item.children?.some((c) => c.url === pathname)
+  // Open if a child is the current route; otherwise honour manual toggling.
+  const [open, setOpen] = React.useState(childActive)
+
+  // Keep the group expanded after navigating to one of its children.
+  React.useEffect(() => {
+    if (childActive) setOpen(true)
+  }, [childActive])
+
+  if (!item.children) {
+    return (
+      <SidebarMenuItem>
+        <SidebarMenuButton
+          tooltip={item.title}
+          render={<a href={item.url} />}
+          className={
+            isActive
+              ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground"
+              : ""
+          }
+        >
+          {item.icon}
+          <span>{item.title}</span>
+        </SidebarMenuButton>
+      </SidebarMenuItem>
+    )
+  }
+
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        tooltip={item.title}
+        onClick={() => setOpen((o) => !o)}
+        className="justify-between"
+      >
+        <span className="flex items-center gap-2">
+          {item.icon}
+          <span>{item.title}</span>
+        </span>
+        <ChevronRightIcon
+          className="ml-auto size-4 transition-transform duration-200"
+          style={{ transform: open ? "rotate(90deg)" : "rotate(0deg)" }}
+        />
+      </SidebarMenuButton>
+
+      {hasChildren && open && (
+        <SidebarMenuSub>
+          {item.children!.map((child) => (
+            <SidebarMenuSubItem key={child.title}>
+              <SidebarMenuSubButton
+                render={<a href={child.url} />}
+                className={
+                  pathname === child.url
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground"
+                    : ""
+                }
+              >
+                {child.title}
+              </SidebarMenuSubButton>
+            </SidebarMenuSubItem>
+          ))}
+        </SidebarMenuSub>
+      )}
+    </SidebarMenuItem>
+  )
+}
+
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const pathname = usePathname()
   return (
     <Sidebar collapsible="offcanvas" {...props}>
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
-              render={<a href="#" />}
+              className="data-[slot=sidebar-menu-button]:p-1.5! h-auto"
+              render={<a href="/dashboard" />}
             >
-              <CommandIcon className="size-5!" />
-              <span className="text-base font-semibold">Acme Inc.</span>
+              <span className="text-lg font-black tracking-widest uppercase text-foreground">
+                Om Casting
+              </span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
+
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <SidebarMenu className="px-2 py-2 gap-1">
+          {navItems.map((item) => (
+            <NavItem key={item.title} item={item} pathname={pathname} />
+          ))}
+        </SidebarMenu>
       </SidebarContent>
+
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={user} />
       </SidebarFooter>
     </Sidebar>
   )
