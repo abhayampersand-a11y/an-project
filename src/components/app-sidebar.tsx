@@ -67,7 +67,7 @@ const navItems: NavItem[] = [
     url: "#",
     icon: <FileTextIcon />,
     children: [
-      { title: "Javak",  url: "#" },
+      { title: "Javak",  url: "/dashboard/invoice/javak" },
       { title: "Aavak",  url: "#" },
       { title: "Garanu", url: "#" },
     ],
@@ -123,10 +123,13 @@ function NavItem({ item, pathname }: { item: NavItem; pathname: string }) {
   // Open if a child is the current route; otherwise honour manual toggling.
   const [open, setOpen] = React.useState(childActive)
 
-  // Keep the group expanded after navigating to one of its children.
-  React.useEffect(() => {
+  // Expand the group when navigating into one of its children. Done during
+  // render (not in an effect) to avoid synchronous-setState cascading renders.
+  const [wasChildActive, setWasChildActive] = React.useState(childActive)
+  if (childActive !== wasChildActive) {
+    setWasChildActive(childActive)
     if (childActive) setOpen(true)
-  }, [childActive])
+  }
 
   if (!item.children) {
     return (

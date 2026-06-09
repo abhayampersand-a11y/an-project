@@ -90,11 +90,39 @@ CREATE TABLE IF NOT EXISTS parties (
   status         VARCHAR(20) DEFAULT 'Active',
   created_at     TIMESTAMPTZ DEFAULT NOW()
 );
+
+CREATE TABLE IF NOT EXISTS javaks (
+  id              SERIAL PRIMARY KEY,
+  type            VARCHAR(1) NOT NULL DEFAULT 'w',  -- 'w' = wastage, 'g' = ghat
+  bill_type       VARCHAR(10) NOT NULL DEFAULT 'Debit',
+  inv_date        DATE NOT NULL DEFAULT CURRENT_DATE,
+  invoice_no      VARCHAR(50) NOT NULL,
+  party           VARCHAR(150) NOT NULL,
+  bags            JSONB NOT NULL DEFAULT '[]',   -- [{ tr, no_of_bag, weight_per_bag, total_weight }]
+  items           JSONB NOT NULL DEFAULT '[]',   -- [{ item, tr, gross_w, bag_w, net_w, touch, wastage, fine, rate, amount }]
+  fine            NUMERIC(14,3) DEFAULT 0,        -- total fine
+  labour          NUMERIC(14,2) DEFAULT 0,        -- total labour
+  previous_amount NUMERIC(14,2) DEFAULT 0,
+  previous_fine   NUMERIC(14,3) DEFAULT 0,
+  closing_amount  NUMERIC(14,2) DEFAULT 0,
+  closing_fine    NUMERIC(14,3) DEFAULT 0,
+  remark          TEXT,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Additive migrations for databases created before the columns above existed.
+ALTER TABLE javaks ADD COLUMN IF NOT EXISTS bill_type       VARCHAR(10) NOT NULL DEFAULT 'Debit';
+ALTER TABLE javaks ADD COLUMN IF NOT EXISTS bags            JSONB NOT NULL DEFAULT '[]';
+ALTER TABLE javaks ADD COLUMN IF NOT EXISTS items           JSONB NOT NULL DEFAULT '[]';
+ALTER TABLE javaks ADD COLUMN IF NOT EXISTS previous_amount NUMERIC(14,2) DEFAULT 0;
+ALTER TABLE javaks ADD COLUMN IF NOT EXISTS previous_fine   NUMERIC(14,3) DEFAULT 0;
+ALTER TABLE javaks ADD COLUMN IF NOT EXISTS closing_amount  NUMERIC(14,2) DEFAULT 0;
+ALTER TABLE javaks ADD COLUMN IF NOT EXISTS closing_fine    NUMERIC(14,3) DEFAULT 0;
 `;
 
 try {
   await pool.query(SQL);
-  console.log("✅ Database setup complete. Tables ready: users, states, cities, items, parties, payments");
+  console.log("✅ Database setup complete. Tables ready: users, states, cities, items, parties, payments, javaks");
 } catch (err) {
   console.error("❌ Setup failed:", err.message);
   process.exit(1);
