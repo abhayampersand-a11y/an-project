@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
   LayoutDashboardIcon,
@@ -136,7 +137,7 @@ function NavItem({ item, pathname }: { item: NavItem; pathname: string }) {
       <SidebarMenuItem>
         <SidebarMenuButton
           tooltip={item.title}
-          render={<a href={item.url} />}
+          render={<Link href={item.url} />}
           className={
             isActive
               ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground"
@@ -172,7 +173,7 @@ function NavItem({ item, pathname }: { item: NavItem; pathname: string }) {
           {item.children!.map((child) => (
             <SidebarMenuSubItem key={child.title}>
               <SidebarMenuSubButton
-                render={<a href={child.url} />}
+                render={<Link href={child.url} />}
                 className={
                   pathname === child.url
                     ? "bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary hover:text-sidebar-primary-foreground"
@@ -198,7 +199,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           <SidebarMenuItem>
             <SidebarMenuButton
               className="data-[slot=sidebar-menu-button]:p-1.5! h-auto"
-              render={<a href="/dashboard" />}
+              render={<Link href="/dashboard" />}
             >
               <OmCastingLogo
                 className="text-sidebar-foreground [&>svg]:size-10"
