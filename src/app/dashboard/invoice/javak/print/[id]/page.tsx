@@ -101,7 +101,7 @@ export default function JavakInvoicePage() {
         </Button>
       </div>
 
-      <div id="javak-invoice" className="flex w-full max-w-[820px] flex-col gap-4">
+      <div id="javak-invoice" className="flex w-full max-w-[820px] flex-col gap-4 overflow-x-auto">
         <InvoiceCopy
           copyLabel="Original"
           javak={javak}
@@ -144,7 +144,7 @@ function InvoiceCopy({
 }) {
   const cell = "border border-black px-2 py-1"
   return (
-    <div className="break-inside-avoid border border-black bg-white text-black">
+    <div className="min-w-[680px] break-inside-avoid border border-black bg-white text-black">
       {/* religious header */}
       <div className="grid grid-cols-3 px-3 pt-2 text-[11px]">
         <span className="text-left">Shree Ganeshay Namah</span>

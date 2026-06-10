@@ -188,16 +188,16 @@ export default function ItemPage() {
   ]
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6">
+    <div className="flex flex-1 flex-col gap-4 p-4 md:gap-6 md:p-6">
       {/* breadcrumb */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-semibold">Item</h1>
         <p className="text-sm text-muted-foreground">Om Casting &rsaquo; Item</p>
       </div>
 
       <div className="flex flex-col gap-6 lg:flex-row">
         {/* ── LEFT: form ── */}
-        <div className="w-full rounded-lg border bg-card p-6 lg:w-96 shrink-0">
+        <div className="w-full rounded-lg border bg-card p-4 md:p-6 lg:w-96 shrink-0">
           <h2 className="mb-5 text-center text-sm font-bold uppercase tracking-widest text-muted-foreground">
             {editingId ? "Edit Item" : "Add Item"}
           </h2>

@@ -79,14 +79,14 @@ export default function RsRojmedPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-6 p-6">
-      <div className="flex items-center justify-between">
+    <div className="flex flex-1 flex-col gap-4 p-4 md:gap-6 md:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-xl font-semibold">RS ROJMED</h1>
         <p className="text-sm text-muted-foreground">Om Casting &rsaquo; Rs Rojmed</p>
       </div>
 
       {/* filter */}
-      <div className="rounded-lg border bg-card p-6">
+      <div className="rounded-lg border bg-card p-4 md:p-6">
         <div className="grid items-end gap-5 md:grid-cols-[1fr_1fr_auto]">
           <div className="flex flex-col gap-2">
             <Label className="text-sm">Party <span className="text-destructive">*</span></Label>
@@ -122,7 +122,7 @@ export default function RsRojmedPage() {
 
       {/* statement */}
       {stmt && (
-        <div id="rs-statement" className="rounded-lg border bg-card p-6">
+        <div id="rs-statement" className="rounded-lg border bg-card p-4 md:p-6">
           <style>{`
             @media print {
               body * { visibility: hidden !important; }
@@ -182,9 +182,9 @@ function Particulars({
   total: number
 }) {
   return (
-    <div>
+    <div className="overflow-x-auto">
       <p className="mb-2 text-center text-sm font-semibold text-muted-foreground">{title}</p>
-      <table className="w-full border-collapse text-sm">
+      <table className="w-full min-w-[420px] border-collapse text-sm">
         <thead>
           <tr className="border-b text-xs uppercase text-muted-foreground">
             <th className="px-2 py-1 text-left">Date</th>
