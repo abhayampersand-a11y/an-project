@@ -1,30 +1,16 @@
 "use client"
 
 import * as React from "react"
-import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-  type ColumnDef,
-  type SortingState,
-} from "@tanstack/react-table"
-import { ArrowUpDownIcon, PencilIcon, Trash2Icon, PrinterIcon, CopyIcon, FileSpreadsheetIcon } from "lucide-react"
+import { type ColumnDef } from "@tanstack/react-table"
+import { ArrowUpDownIcon, PencilIcon, Trash2Icon } from "lucide-react"
 import { toast } from "sonner"
 
 import { useConfirm } from "@/components/confirm-dialog"
+import { ListTable } from "@/components/list-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import {
   Select,
   SelectContent,
@@ -33,17 +19,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 
 type Payment = {
   id: number
+  voucher_no: string | null
   bill_type: string
   party: string
   pay_date: string
@@ -80,13 +59,12 @@ const emptyForm = () => ({
 export default function PaymentPage() {
   const confirm = useConfirm()
   const [payments, setPayments] = React.useState<Payment[]>([])
+  const [loading, setLoading] = React.useState(true)
   const [parties, setParties] = React.useState<string[]>([])
   const [form, setForm] = React.useState(emptyForm())
   const [editingId, setEditingId] = React.useState<number | null>(null)
   const [saving, setSaving] = React.useState(false)
   const [deletingId, setDeletingId] = React.useState<number | null>(null)
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [globalFilter, setGlobalFilter] = React.useState("")
 
   React.useEffect(() => {
     fetch("/api/payments")
@@ -96,6 +74,7 @@ export default function PaymentPage() {
         if (Array.isArray(data)) setPayments(data)
       })
       .catch((err) => toast.error(err instanceof Error ? err.message : "Failed to load payments"))
+      .finally(() => setLoading(false))
 
     fetch("/api/parties")
       .then((r) => r.json())
@@ -184,39 +163,21 @@ export default function PaymentPage() {
     }
   }
 
-  function handlePrint() {
-    window.print()
-  }
-
-  function handleCopy() {
-    const text = payments
-      .map((p, i) => `${i + 1}\t${p.bill_type}\t${p.party}\t${fmtDate(p.pay_date)}\t${p.rs}\t${p.fine}\t${p.remark ?? ""}`)
-      .join("\n")
-    navigator.clipboard.writeText(`#\tBill Type\tParty\tDate\tRs\tFine\tRemark\n${text}`)
-    toast.success("Table copied to clipboard")
-  }
-
-  function handleExcel() {
-    const header = "#,Bill Type,Party,Date,Rs,Fine,Remark"
-    const rows = payments.map(
-      (p, i) => `${i + 1},${p.bill_type},${p.party},${fmtDate(p.pay_date)},${p.rs},${p.fine},"${p.remark ?? ""}"`,
-    )
-    const csv = [header, ...rows].join("\n")
-    const blob = new Blob([csv], { type: "text/csv" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = "payments.csv"
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
   const columns: ColumnDef<Payment>[] = [
     {
       id: "serial",
       header: "#",
       cell: ({ row }) => row.index + 1,
       enableSorting: false,
+    },
+    {
+      accessorKey: "voucher_no",
+      header: ({ column }) => (
+        <button className="flex items-center gap-1 hover:text-foreground" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
+          Voucher <ArrowUpDownIcon className="size-3" />
+        </button>
+      ),
+      cell: ({ row }) => row.original.voucher_no ?? "—",
     },
     {
       accessorKey: "bill_type",
@@ -304,24 +265,6 @@ export default function PaymentPage() {
     },
   ]
 
-  const table = useReactTable({
-    data: payments,
-    columns,
-    state: { sorting, globalFilter },
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize: 10 } },
-  })
-
-  const { pageIndex, pageSize } = table.getState().pagination
-  const totalFiltered = table.getFilteredRowModel().rows.length
-  const from = totalFiltered === 0 ? 0 : pageIndex * pageSize + 1
-  const to = Math.min((pageIndex + 1) * pageSize, totalFiltered)
-
   return (
     <div className="flex flex-1 flex-col gap-6 p-6">
       {/* breadcrumb */}
@@ -337,6 +280,7 @@ export default function PaymentPage() {
             {editingId ? "Edit Payment" : "Add Payment"}
           </h2>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <fieldset disabled={saving} className="contents">
             <div className="grid grid-cols-[90px_1fr] items-center gap-3">
               <Label className="text-sm">Bill Type</Label>
               <div className="flex items-center gap-5">
@@ -422,103 +366,23 @@ export default function PaymentPage() {
                 </Button>
               )}
             </div>
+            </fieldset>
           </form>
         </div>
 
         {/* ── RIGHT: table ── */}
-        <div className="flex-1 rounded-lg border bg-card p-4">
-          {/* toolbar */}
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={handlePrint}>
-                <PrinterIcon className="size-4" /> Print
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleCopy}>
-                <CopyIcon className="size-4" /> Copy
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleExcel}>
-                <FileSpreadsheetIcon className="size-4" /> Excel
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger render={<Button variant="outline" size="sm">Column Visibility ▾</Button>} />
-                <DropdownMenuContent align="end">
-                  {table.getAllColumns().filter((c) => c.getCanHide()).map((col) => (
-                    <DropdownMenuCheckboxItem
-                      key={col.id}
-                      className="capitalize"
-                      checked={col.getIsVisible()}
-                      onCheckedChange={(v) => col.toggleVisibility(!!v)}
-                    >
-                      {col.id.replace("_", " ")}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="search" className="text-sm">Search:</Label>
-              <Input
-                id="search"
-                className="h-8 w-48"
-                value={globalFilter}
-                onChange={(e) => setGlobalFilter(e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* table */}
-          <div className="overflow-hidden rounded border">
-            <Table>
-              <TableHeader className="bg-muted">
-                {table.getHeaderGroups().map((hg) => (
-                  <TableRow key={hg.id}>
-                    {hg.headers.map((h) => (
-                      <TableHead key={h.id} className="text-xs font-semibold uppercase">
-                        {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                      No payments found.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} className="hover:bg-muted/40">
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className="py-2">
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* footer */}
-          <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
-            <span>
-              Showing {from} to {to} of {totalFiltered} entries
-            </span>
-            <div className="flex items-center gap-1">
-              <Button variant="outline" size="sm" className="h-8" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
-                Previous
-              </Button>
-              <span className="flex size-8 items-center justify-center rounded border bg-primary text-xs font-medium text-primary-foreground">
-                {pageIndex + 1}
-              </span>
-              <Button variant="outline" size="sm" className="h-8" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
-                Next
-              </Button>
-            </div>
-          </div>
+        <div className="flex-1">
+          <ListTable
+            columns={columns as ColumnDef<Payment, unknown>[]}
+            data={payments}
+            loading={loading}
+            emptyMessage="No payments found."
+            exportConfig={{
+              name: "payments",
+              headers: ["#", "Voucher", "Bill Type", "Party", "Date", "Rs", "Fine", "Remark"],
+              row: (p, i) => [i + 1, p.voucher_no ?? "", p.bill_type, p.party, fmtDate(p.pay_date), p.rs, p.fine, p.remark ?? ""],
+            }}
+          />
         </div>
       </div>
 

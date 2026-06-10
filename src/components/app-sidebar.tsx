@@ -69,8 +69,8 @@ const navItems: NavItem[] = [
     icon: <FileTextIcon />,
     children: [
       { title: "Javak",  url: "/dashboard/invoice/javak" },
-      { title: "Aavak",  url: "#" },
-      { title: "Garanu", url: "#" },
+      { title: "Aavak",  url: "/dashboard/invoice/aavak" },
+      { title: "Garanu", url: "/dashboard/invoice/garanu" },
     ],
   },
   {
@@ -83,13 +83,13 @@ const navItems: NavItem[] = [
     url: "#",
     icon: <BookOpenIcon />,
     children: [
-      { title: "Party Tareej",    url: "#" },
-      { title: "RS Rojmed",       url: "#" },
+      { title: "Party Tareej",    url: "/dashboard/ledger/party-tareej" },
+      { title: "RS Rojmed",       url: "/dashboard/ledger/rs-rojmed" },
       { title: "Casting",         url: "#" },
-      { title: "Fine Rojmed",     url: "#" },
-      { title: "Fine Daily Rojmed", url: "#" },
-      { title: "RS Daily Rojmed", url: "#" },
-      { title: "Final Report",    url: "#" },
+      { title: "Fine Rojmed",     url: "/dashboard/ledger/fine-rojmed" },
+      { title: "Fine Daily Rojmed", url: "/dashboard/ledger/fine-daily-rojmed" },
+      { title: "RS Daily Rojmed", url: "/dashboard/ledger/rs-daily-rojmed" },
+      { title: "Final Report",    url: "/dashboard/ledger/final-report" },
     ],
   },
   {

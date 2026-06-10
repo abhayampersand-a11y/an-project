@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS items (
 
 CREATE TABLE IF NOT EXISTS payments (
   id         SERIAL PRIMARY KEY,
+  voucher_no VARCHAR(50),
   bill_type  VARCHAR(10) NOT NULL DEFAULT 'Credit',
   party      VARCHAR(150) NOT NULL,
   pay_date   DATE NOT NULL DEFAULT CURRENT_DATE,
@@ -76,6 +77,8 @@ CREATE TABLE IF NOT EXISTS payments (
   remark     TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+ALTER TABLE payments ADD COLUMN IF NOT EXISTS voucher_no VARCHAR(50);
 
 CREATE TABLE IF NOT EXISTS parties (
   id             SERIAL PRIMARY KEY,
@@ -118,11 +121,47 @@ ALTER TABLE javaks ADD COLUMN IF NOT EXISTS previous_amount NUMERIC(14,2) DEFAUL
 ALTER TABLE javaks ADD COLUMN IF NOT EXISTS previous_fine   NUMERIC(14,3) DEFAULT 0;
 ALTER TABLE javaks ADD COLUMN IF NOT EXISTS closing_amount  NUMERIC(14,2) DEFAULT 0;
 ALTER TABLE javaks ADD COLUMN IF NOT EXISTS closing_fine    NUMERIC(14,3) DEFAULT 0;
+
+CREATE TABLE IF NOT EXISTS aavaks (
+  id              SERIAL PRIMARY KEY,
+  inv_date        DATE NOT NULL DEFAULT CURRENT_DATE,
+  invoice_no      VARCHAR(50) NOT NULL,
+  party           VARCHAR(150) NOT NULL,
+  items           JSONB NOT NULL DEFAULT '[]',   -- [{ item, gr_wt, fine, amount }]
+  fine            NUMERIC(14,3) DEFAULT 0,        -- final total fine (incl. round off)
+  amount          NUMERIC(14,2) DEFAULT 0,        -- final total amount (incl. round off)
+  roundoff_fine   NUMERIC(14,3) DEFAULT 0,
+  roundoff_amount NUMERIC(14,2) DEFAULT 0,
+  previous_amount NUMERIC(14,2) DEFAULT 0,
+  previous_fine   NUMERIC(14,3) DEFAULT 0,
+  closing_amount  NUMERIC(14,2) DEFAULT 0,
+  closing_fine    NUMERIC(14,3) DEFAULT 0,
+  remark          TEXT,
+  created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS garanus (
+  id           SERIAL PRIMARY KEY,
+  inv_date     DATE NOT NULL DEFAULT CURRENT_DATE,
+  party        VARCHAR(150) NOT NULL,
+  items        JSONB NOT NULL DEFAULT '[]',   -- [{ item, gr_wt, touch, fine }]
+  m_touch      NUMERIC(14,3) DEFAULT 0,
+  m_touch2     NUMERIC(14,3) DEFAULT 0,
+  copper_t     NUMERIC(14,3) DEFAULT 0,
+  fine         NUMERIC(14,3) DEFAULT 0,        -- total item fine
+  g_weight     NUMERIC(14,3) DEFAULT 0,        -- total gross weight
+  total_f      NUMERIC(14,3) DEFAULT 0,
+  garanu       NUMERIC(14,3) DEFAULT 0,
+  final_copper NUMERIC(14,3) DEFAULT 0,
+  details      JSONB NOT NULL DEFAULT '{}',    -- intermediate values (r_copper, copper_f1, etc.)
+  remark       TEXT,
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
 `;
 
 try {
   await pool.query(SQL);
-  console.log("✅ Database setup complete. Tables ready: users, states, cities, items, parties, payments, javaks");
+  console.log("✅ Database setup complete. Tables ready: users, states, cities, items, parties, payments, javaks, aavaks, garanus");
 } catch (err) {
   console.error("❌ Setup failed:", err.message);
   process.exit(1);

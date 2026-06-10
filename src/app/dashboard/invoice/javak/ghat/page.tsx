@@ -32,6 +32,9 @@ const num = (v: unknown) => {
 
 const round2 = (n: number) => Math.round(n * 100) / 100
 
+/** Ghat is auto-derived as this percentage of Net Weight. */
+const GHAT_PERCENT = 2
+
 type BagRow = { tr: string; no_of_bag: string; weight_per_bag: string }
 type ItemRow = {
   item: string
@@ -39,12 +42,11 @@ type ItemRow = {
   gross_w: string
   net_w: string
   touch: string
-  wastage: string
   rate: string
 }
 
 const emptyBag = (): BagRow => ({ tr: "1", no_of_bag: "", weight_per_bag: "" })
-const emptyItem = (): ItemRow => ({ item: "", tr: "1", gross_w: "", net_w: "", touch: "", wastage: "", rate: "" })
+const emptyItem = (): ItemRow => ({ item: "", tr: "1", gross_w: "", net_w: "", touch: "", rate: "" })
 
 /** Total bag weight for a given Tr across the bag rows. */
 const bagWeightOf = (tr: string, arr: BagRow[]) =>
@@ -56,21 +58,19 @@ const withNet = (its: ItemRow[], arr: BagRow[]): ItemRow[] =>
 
 const TR_OPTIONS = Array.from({ length: 10 }, (_, i) => String(i + 1))
 
-export default function JavakWastagePageWrapper() {
+export default function JavakGhatPageWrapper() {
   return (
     <React.Suspense fallback={<div className="p-6 text-sm text-muted-foreground">Loading…</div>}>
-      <JavakWastagePage />
+      <JavakGhatPage />
     </React.Suspense>
   )
 }
 
-function JavakWastagePage() {
+function JavakGhatPage() {
   const router = useRouter()
   const search = useSearchParams()
   const editId = search.get("id")
-  const typeParam = search.get("type") === "g" ? "g" : "w"
 
-  const [type, setType] = React.useState<"w" | "g">(typeParam)
   const [billType, setBillType] = React.useState("Debit")
   const [invoiceNo, setInvoiceNo] = React.useState("")
   const [party, setParty] = React.useState("")
@@ -114,7 +114,6 @@ function JavakWastagePage() {
       .then(async (r) => {
         const d = await r.json()
         if (!r.ok) throw new Error(d.error ?? "Failed to load")
-        setType(d.type === "g" ? "g" : "w")
         setBillType(d.bill_type ?? "Debit")
         setInvoiceNo(d.invoice_no ?? "")
         setParty(d.party ?? "")
@@ -136,7 +135,6 @@ function JavakWastagePage() {
               gross_w: String(it.gross_w ?? ""),
               net_w: String(it.net_w ?? ""),
               touch: String(it.touch ?? ""),
-              wastage: String(it.wastage ?? ""),
               rate: String(it.rate ?? ""),
             }))
           : [emptyItem()]
@@ -152,9 +150,11 @@ function JavakWastagePage() {
   const computedItems = items.map((it) => {
     const bag_w = bagWeightOf(it.tr, bags)
     const net_num = num(it.net_w)
-    const fine = Math.round(net_num * (num(it.touch) + num(it.wastage)) / 100)
+    const ghat = round2(net_num * GHAT_PERCENT / 100)
+    const weight = round2(net_num + ghat)
+    const fine = Math.round(weight * num(it.touch) / 100)
     const amount = Math.round(net_num * num(it.rate) / 1000)
-    return { ...it, bag_w, net_num, fine, amount }
+    return { ...it, bag_w, net_num, ghat, weight, fine, amount }
   })
 
   const totalFine = computedItems.reduce((s, it) => s + it.fine, 0)
@@ -192,7 +192,7 @@ function JavakWastagePage() {
     }
     setSaving(true)
     const payload = {
-      type,
+      type: "g",
       bill_type: billType,
       inv_date: invDate,
       invoice_no: invoiceNo,
@@ -209,8 +209,9 @@ function JavakWastagePage() {
         gross_w: num(it.gross_w),
         bag_w: it.bag_w,
         net_w: it.net_num,
+        ghat: it.ghat,
+        weight: it.weight,
         touch: num(it.touch),
-        wastage: num(it.wastage),
         fine: it.fine,
         rate: num(it.rate),
         amount: it.amount,
@@ -240,21 +241,19 @@ function JavakWastagePage() {
     }
   }
 
-  const title = type === "w" ? "Wastage" : "Ghat"
-
   return (
     <div className="flex flex-1 flex-col gap-6 p-6">
       {/* breadcrumb */}
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-semibold">JAVAK</h1>
         <p className="text-sm text-muted-foreground">
-          Om Casting &rsaquo; {editId ? "Edit" : "Add"} Javak {title}
+          Om Casting &rsaquo; {editId ? "Edit" : "Add"} Javak Ghat
         </p>
       </div>
 
       <div className="rounded-lg border bg-card p-6">
         <h2 className="mb-5 text-sm font-bold uppercase tracking-widest text-muted-foreground">
-          {editId ? "Edit" : "Add"} Javak {title}
+          {editId ? "Edit" : "Add"} Javak Ghat
         </h2>
 
         {/* ── header fields ── */}
@@ -356,14 +355,14 @@ function JavakWastagePage() {
         <div className="mt-8">
           <h3 className="mb-3 text-sm font-bold uppercase tracking-widest text-muted-foreground">Item Detail</h3>
           <div className="overflow-x-auto">
-            <div className="min-w-[1100px]">
-              <div className="grid grid-cols-[1.4fr_70px_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_56px] gap-2 px-1 pb-2 text-xs font-semibold uppercase text-muted-foreground">
+            <div className="min-w-[1280px]">
+              <div className="grid grid-cols-[1.4fr_70px_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_56px] gap-2 px-1 pb-2 text-xs font-semibold uppercase text-muted-foreground">
                 <span>Item</span><span>Tr</span><span>Gross W.</span><span>Bag W.</span><span>Net W.</span>
-                <span>Touch</span><span>Wastage</span><span>Fine</span><span>Rate</span><span>Amount</span><span />
+                <span>Ghat</span><span>Weight</span><span>Touch</span><span>Fine</span><span>Rate</span><span>Amount</span><span />
               </div>
               <div className="flex flex-col gap-2">
                 {computedItems.map((it, i) => (
-                  <div key={i} className="grid grid-cols-[1.4fr_70px_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_56px] items-center gap-2">
+                  <div key={i} className="grid grid-cols-[1.4fr_70px_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_1fr_56px] items-center gap-2">
                     <Select
                       value={it.item}
                       onValueChange={(v) => { if (v) setItem(i, { item: v }) }}
@@ -395,8 +394,9 @@ function JavakWastagePage() {
                     <Input type="number" value={it.gross_w} onChange={(e) => setItem(i, { gross_w: e.target.value, net_w: String(round2(num(e.target.value) - bagWeightOf(it.tr, bags))) })} />
                     <Input value={it.bag_w || ""} readOnly className="bg-muted" />
                     <Input type="number" value={it.net_w} onChange={(e) => setItem(i, { net_w: e.target.value })} />
+                    <Input value={it.ghat || ""} readOnly className="bg-muted" />
+                    <Input value={it.weight || ""} readOnly className="bg-muted" />
                     <Input type="number" value={it.touch} onChange={(e) => setItem(i, { touch: e.target.value })} />
-                    <Input type="number" value={it.wastage} onChange={(e) => setItem(i, { wastage: e.target.value })} />
                     <Input value={it.fine || ""} readOnly className="bg-muted" />
                     <Input type="number" value={it.rate} onChange={(e) => setItem(i, { rate: e.target.value })} />
                     <Input value={it.amount || ""} readOnly className="bg-muted" />

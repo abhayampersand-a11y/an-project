@@ -2,10 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
 const SELECT =
-  "id, bill_type, party, to_char(pay_date, 'YYYY-MM-DD') AS pay_date, fine, rs, remark, created_at";
+  "id, voucher_no, bill_type, party, to_char(pay_date, 'YYYY-MM-DD') AS pay_date, fine, rs, remark, created_at";
 
 type PaymentRow = {
   id: number;
+  voucher_no: string | null;
   bill_type: string;
   party: string;
   pay_date: string;

@@ -1,30 +1,16 @@
 "use client"
 
 import * as React from "react"
-import {
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-  type ColumnDef,
-  type SortingState,
-} from "@tanstack/react-table"
-import { ArrowUpDownIcon, PencilIcon, Trash2Icon, PrinterIcon, CopyIcon, FileSpreadsheetIcon } from "lucide-react"
+import { type ColumnDef } from "@tanstack/react-table"
+import { ArrowUpDownIcon, PencilIcon, Trash2Icon } from "lucide-react"
 import { toast } from "sonner"
 
 import { useConfirm } from "@/components/confirm-dialog"
+import { ListTable } from "@/components/list-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  DropdownMenu,
-  DropdownMenuCheckboxItem,
-  DropdownMenuContent,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import {
   Select,
   SelectContent,
@@ -33,14 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 
 type State = {
   id: number
@@ -58,12 +36,11 @@ const COUNTRIES = ["India", "USA", "UK", "UAE", "Canada", "Australia"]
 export default function StatePage() {
   const confirm = useConfirm()
   const [states, setStates] = React.useState<State[]>([])
+  const [loading, setLoading] = React.useState(true)
   const [form, setForm] = React.useState(EMPTY)
   const [editingId, setEditingId] = React.useState<number | null>(null)
   const [saving, setSaving] = React.useState(false)
   const [deletingId, setDeletingId] = React.useState<number | null>(null)
-  const [sorting, setSorting] = React.useState<SortingState>([])
-  const [globalFilter, setGlobalFilter] = React.useState("")
 
   React.useEffect(() => {
     fetch("/api/states")
@@ -73,6 +50,7 @@ export default function StatePage() {
         if (Array.isArray(data)) setStates(data)
       })
       .catch((err) => toast.error(err instanceof Error ? err.message : "Failed to load states"))
+      .finally(() => setLoading(false))
   }, [])
 
   function startEdit(state: State) {
@@ -163,31 +141,6 @@ export default function StatePage() {
     }
   }
 
-  function handlePrint() {
-    window.print()
-  }
-
-  function handleCopy() {
-    const text = states
-      .map((s, i) => `${i + 1}\t${s.state_name}\t${s.state_code}\t${s.country}\t${s.status}`)
-      .join("\n")
-    navigator.clipboard.writeText(`#\tState Name\tState Code\tCountry\tStatus\n${text}`)
-    toast.success("Table copied to clipboard")
-  }
-
-  function handleExcel() {
-    const header = "#,State Name,State Code,Country,Status"
-    const rows = states.map((s, i) => `${i + 1},${s.state_name},${s.state_code},${s.country},${s.status}`)
-    const csv = [header, ...rows].join("\n")
-    const blob = new Blob([csv], { type: "text/csv" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = "states.csv"
-    a.click()
-    URL.revokeObjectURL(url)
-  }
-
   const columns: ColumnDef<State>[] = [
     {
       id: "serial",
@@ -198,10 +151,7 @@ export default function StatePage() {
     {
       accessorKey: "state_name",
       header: ({ column }) => (
-        <button
-          className="flex items-center gap-1 hover:text-foreground"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
+        <button className="flex items-center gap-1 hover:text-foreground" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
           State Name <ArrowUpDownIcon className="size-3" />
         </button>
       ),
@@ -209,10 +159,7 @@ export default function StatePage() {
     {
       accessorKey: "state_code",
       header: ({ column }) => (
-        <button
-          className="flex items-center gap-1 hover:text-foreground"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
+        <button className="flex items-center gap-1 hover:text-foreground" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
           State Code <ArrowUpDownIcon className="size-3" />
         </button>
       ),
@@ -220,10 +167,7 @@ export default function StatePage() {
     {
       accessorKey: "country",
       header: ({ column }) => (
-        <button
-          className="flex items-center gap-1 hover:text-foreground"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
+        <button className="flex items-center gap-1 hover:text-foreground" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
           Country <ArrowUpDownIcon className="size-3" />
         </button>
       ),
@@ -231,10 +175,7 @@ export default function StatePage() {
     {
       accessorKey: "status",
       header: ({ column }) => (
-        <button
-          className="flex items-center gap-1 hover:text-foreground"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-        >
+        <button className="flex items-center gap-1 hover:text-foreground" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
           Status <ArrowUpDownIcon className="size-3" />
         </button>
       ),
@@ -256,14 +197,10 @@ export default function StatePage() {
     {
       id: "actions",
       header: "",
+      enableHiding: false,
       cell: ({ row }) => (
         <div className="flex items-center gap-1">
-          <Button
-            variant="outline"
-            size="icon"
-            className="size-8"
-            onClick={() => startEdit(row.original)}
-          >
+          <Button variant="outline" size="icon" className="size-8" onClick={() => startEdit(row.original)}>
             <PencilIcon className="size-3.5" />
           </Button>
           <Button
@@ -280,24 +217,6 @@ export default function StatePage() {
     },
   ]
 
-  const table = useReactTable({
-    data: states,
-    columns,
-    state: { sorting, globalFilter },
-    onSortingChange: setSorting,
-    onGlobalFilterChange: setGlobalFilter,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize: 10 } },
-  })
-
-  const { pageIndex, pageSize } = table.getState().pagination
-  const totalFiltered = table.getFilteredRowModel().rows.length
-  const from = totalFiltered === 0 ? 0 : pageIndex * pageSize + 1
-  const to = Math.min((pageIndex + 1) * pageSize, totalFiltered)
-
   return (
     <div className="flex flex-1 flex-col gap-6 p-6">
       {/* breadcrumb */}
@@ -313,171 +232,79 @@ export default function StatePage() {
             {editingId ? "Edit State" : "Add State"}
           </h2>
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="state_name">
-                State Name <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="state_name"
-                placeholder="State Name"
-                value={form.state_name}
-                onChange={(e) => setForm((f) => ({ ...f, state_name: e.target.value }))}
-                required
-              />
-            </div>
+            <fieldset disabled={saving} className="contents">
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="state_name">
+                  State Name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="state_name"
+                  placeholder="State Name"
+                  value={form.state_name}
+                  onChange={(e) => setForm((f) => ({ ...f, state_name: e.target.value }))}
+                  required
+                />
+              </div>
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="state_code">State Code</Label>
-              <Input
-                id="state_code"
-                placeholder="Code"
-                value={form.state_code}
-                onChange={(e) => setForm((f) => ({ ...f, state_code: e.target.value }))}
-              />
-            </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="state_code">State Code</Label>
+                <Input
+                  id="state_code"
+                  placeholder="Code"
+                  value={form.state_code}
+                  onChange={(e) => setForm((f) => ({ ...f, state_code: e.target.value }))}
+                />
+              </div>
 
-            <div className="flex flex-col gap-1.5">
-              <Label htmlFor="country">
-                Country <span className="text-destructive">*</span>
-              </Label>
-              <Select
-                value={form.country}
-                onValueChange={(v) => { if (v) setForm((f) => ({ ...f, country: v })) }}
-                items={COUNTRIES.map((c) => ({ label: c, value: c }))}
-              >
-                <SelectTrigger id="country" className="w-full">
-                  <SelectValue placeholder="Select country" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {COUNTRIES.map((c) => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
-            </div>
+              <div className="flex flex-col gap-1.5">
+                <Label htmlFor="country">
+                  Country <span className="text-destructive">*</span>
+                </Label>
+                <Select
+                  value={form.country}
+                  onValueChange={(v) => { if (v) setForm((f) => ({ ...f, country: v })) }}
+                  items={COUNTRIES.map((c) => ({ label: c, value: c }))}
+                >
+                  <SelectTrigger id="country" className="w-full">
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {COUNTRIES.map((c) => (
+                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
 
-            <div className="flex gap-2 pt-1">
-              <Button type="submit" disabled={saving} className="flex-1">
-                {saving ? "Saving…" : editingId ? "Edit State" : "Add State"}
-              </Button>
-              {editingId && (
-                <Button type="button" variant="outline" onClick={cancelEdit}>
-                  Cancel
+              <div className="flex gap-2 pt-1">
+                <Button type="submit" disabled={saving} className="flex-1">
+                  {saving ? "Saving…" : editingId ? "Edit State" : "Add State"}
                 </Button>
-              )}
-            </div>
+                {editingId && (
+                  <Button type="button" variant="outline" onClick={cancelEdit}>
+                    Cancel
+                  </Button>
+                )}
+              </div>
+            </fieldset>
           </form>
         </div>
 
         {/* ── RIGHT: table ── */}
-        <div className="flex-1 rounded-lg border bg-card p-4">
-          {/* toolbar */}
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" onClick={handlePrint}>
-                <PrinterIcon className="size-4" /> Print
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleCopy}>
-                <CopyIcon className="size-4" /> Copy
-              </Button>
-              <Button variant="outline" size="sm" onClick={handleExcel}>
-                <FileSpreadsheetIcon className="size-4" /> Excel
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger render={<Button variant="outline" size="sm">Column Visibility ▾</Button>} />
-                <DropdownMenuContent align="end">
-                  {table.getAllColumns().filter((c) => c.getCanHide()).map((col) => (
-                    <DropdownMenuCheckboxItem
-                      key={col.id}
-                      className="capitalize"
-                      checked={col.getIsVisible()}
-                      onCheckedChange={(v) => col.toggleVisibility(!!v)}
-                    >
-                      {col.id.replace("_", " ")}
-                    </DropdownMenuCheckboxItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <div className="flex items-center gap-2">
-              <Label htmlFor="search" className="text-sm">Search:</Label>
-              <Input
-                id="search"
-                className="h-8 w-48"
-                value={globalFilter}
-                onChange={(e) => setGlobalFilter(e.target.value)}
-                placeholder=""
-              />
-            </div>
-          </div>
-
-          {/* table */}
-          <div className="overflow-hidden rounded border">
-            <Table>
-              <TableHeader className="bg-muted">
-                {table.getHeaderGroups().map((hg) => (
-                  <TableRow key={hg.id}>
-                    {hg.headers.map((h) => (
-                      <TableHead key={h.id} className="text-xs font-semibold uppercase">
-                        {h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}
-                      </TableHead>
-                    ))}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {table.getRowModel().rows.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                      No states found.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  table.getRowModel().rows.map((row) => (
-                    <TableRow key={row.id} className="hover:bg-muted/40">
-                      {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id} className="py-2">
-                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          {/* footer */}
-          <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
-            <span>
-              Showing {from} to {to} of {totalFiltered} entries
-            </span>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8"
-                onClick={() => table.previousPage()}
-                disabled={!table.getCanPreviousPage()}
-              >
-                Previous
-              </Button>
-              <span className="flex size-8 items-center justify-center rounded border bg-primary text-xs font-medium text-primary-foreground">
-                {pageIndex + 1}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
-                Next
-              </Button>
-            </div>
-          </div>
+        <div className="flex-1">
+          <ListTable
+            columns={columns as ColumnDef<State, unknown>[]}
+            data={states}
+            loading={loading}
+            emptyMessage="No states found."
+            exportConfig={{
+              name: "states",
+              headers: ["#", "State Name", "State Code", "Country", "Status"],
+              row: (s, i) => [i + 1, s.state_name, s.state_code, s.country, s.status],
+            }}
+          />
         </div>
       </div>
 

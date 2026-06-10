@@ -12,11 +12,10 @@ import {
   type ColumnDef,
   type SortingState,
 } from "@tanstack/react-table"
-import { ArrowUpDownIcon, PencilIcon, Trash2Icon, EyeIcon, PrinterIcon, CopyIcon, FileSpreadsheetIcon } from "lucide-react"
+import { ArrowUpDownIcon, PencilIcon, Trash2Icon, PrinterIcon, CopyIcon, FileSpreadsheetIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { useConfirm } from "@/components/confirm-dialog"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -35,38 +34,16 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-type JavakItem = {
-  item: string
-  tr: number
-  gross_w: number
-  bag_w: number
-  net_w: number
-  touch: number
-  wastage: number
-  fine: number
-  rate: number
-  amount: number
-}
-
-type Javak = {
+type Garanu = {
   id: number
-  type: string // 'w' = wastage, 'g' = ghat
-  bill_type: string
   inv_date: string
-  invoice_no: string
   party: string
-  items: JavakItem[]
   fine: string
-  labour: string
-  previous_amount: string
-  previous_fine: string
-  closing_amount: string
-  closing_fine: string
-  remark: string | null
+  g_weight: string
+  total_f: string
   created_at: string
 }
 
-/** YYYY-MM-DD -> DD/MM/YYYY for display. */
 function fmtDate(iso: string) {
   if (!iso) return ""
   const [y, m, d] = iso.split("-")
@@ -75,39 +52,39 @@ function fmtDate(iso: string) {
 
 const inr = (v: unknown) => Number(v).toLocaleString("en-IN")
 
-export default function JavakPage() {
+export default function GaranuPage() {
   const router = useRouter()
   const confirm = useConfirm()
-  const [javaks, setJavaks] = React.useState<Javak[]>([])
+  const [garanus, setGaranus] = React.useState<Garanu[]>([])
   const [deletingId, setDeletingId] = React.useState<number | null>(null)
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = React.useState("")
 
   React.useEffect(() => {
-    fetch("/api/javaks")
+    fetch("/api/garanus")
       .then(async (r) => {
         const data = await r.json()
-        if (!r.ok) throw new Error(data.error ?? "Failed to load javaks")
-        if (Array.isArray(data)) setJavaks(data)
+        if (!r.ok) throw new Error(data.error ?? "Failed to load garanus")
+        if (Array.isArray(data)) setGaranus(data)
       })
-      .catch((err) => toast.error(err instanceof Error ? err.message : "Failed to load javaks"))
+      .catch((err) => toast.error(err instanceof Error ? err.message : "Failed to load garanus"))
   }, [])
 
   async function handleDelete(id: number) {
     const ok = await confirm({
-      title: "Delete javak?",
-      description: "This will permanently remove the javak entry. This action cannot be undone.",
+      title: "Delete garanu?",
+      description: "This will permanently remove the garanu entry. This action cannot be undone.",
       confirmText: "Delete",
       destructive: true,
     })
     if (!ok) return
     setDeletingId(id)
     try {
-      const res = await fetch(`/api/javaks/${id}`, { method: "DELETE" })
+      const res = await fetch(`/api/garanus/${id}`, { method: "DELETE" })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? "Delete failed")
-      setJavaks((prev) => prev.filter((j) => j.id !== id))
-      toast.success("Javak deleted")
+      setGaranus((prev) => prev.filter((g) => g.id !== id))
+      toast.success("Garanu deleted")
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Error")
     } finally {
@@ -120,55 +97,33 @@ export default function JavakPage() {
   }
 
   function handleCopy() {
-    const text = javaks
-      .map((j, i) => `${i + 1}\t${j.type}\t${fmtDate(j.inv_date)}\t${j.invoice_no}\t${j.party}\t${j.fine}\t${j.labour}`)
+    const text = garanus
+      .map((g, i) => `${i + 1}\t${fmtDate(g.inv_date)}\t${g.party}\t${g.fine}\t${g.total_f}`)
       .join("\n")
-    navigator.clipboard.writeText(`#\ttype\tDate\tInvoice No\tM/s\tFine\tLabour\n${text}`)
+    navigator.clipboard.writeText(`#\tDate\tParty\tFine\tTotal F\n${text}`)
     toast.success("Table copied to clipboard")
   }
 
   function handleExcel() {
-    const header = "#,type,Date,Invoice No,M/s,Fine,Labour"
-    const rows = javaks.map(
-      (j, i) => `${i + 1},${j.type},${fmtDate(j.inv_date)},${j.invoice_no},"${j.party}",${j.fine},${j.labour}`,
-    )
+    const header = "#,Date,Party,Fine,Total F"
+    const rows = garanus.map((g, i) => `${i + 1},${fmtDate(g.inv_date)},"${g.party}",${g.fine},${g.total_f}`)
     const csv = [header, ...rows].join("\n")
     const blob = new Blob([csv], { type: "text/csv" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
     a.href = url
-    a.download = "javak.csv"
+    a.download = "garanu.csv"
     a.click()
     URL.revokeObjectURL(url)
   }
 
-  const columns: ColumnDef<Javak>[] = [
+  const columns: ColumnDef<Garanu>[] = [
     {
       id: "serial",
       header: "#",
       cell: ({ row }) => row.index + 1,
       enableSorting: false,
       enableHiding: false,
-    },
-    {
-      accessorKey: "type",
-      header: ({ column }) => (
-        <button className="flex items-center gap-1 hover:text-foreground" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          type <ArrowUpDownIcon className="size-3" />
-        </button>
-      ),
-      cell: ({ row }) => (
-        <Badge
-          variant="outline"
-          className={
-            row.original.type === "w"
-              ? "border-amber-400 text-amber-600 dark:text-amber-400"
-              : "border-sky-400 text-sky-600 dark:text-sky-400"
-          }
-        >
-          {row.original.type}
-        </Badge>
-      ),
     },
     {
       accessorKey: "inv_date",
@@ -180,18 +135,10 @@ export default function JavakPage() {
       cell: ({ row }) => fmtDate(row.original.inv_date),
     },
     {
-      accessorKey: "invoice_no",
-      header: ({ column }) => (
-        <button className="flex items-center gap-1 hover:text-foreground" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Invoice No <ArrowUpDownIcon className="size-3" />
-        </button>
-      ),
-    },
-    {
       accessorKey: "party",
       header: ({ column }) => (
         <button className="flex items-center gap-1 hover:text-foreground" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          M/s <ArrowUpDownIcon className="size-3" />
+          Party <ArrowUpDownIcon className="size-3" />
         </button>
       ),
     },
@@ -205,13 +152,13 @@ export default function JavakPage() {
       cell: ({ row }) => inr(row.original.fine),
     },
     {
-      accessorKey: "labour",
+      accessorKey: "total_f",
       header: ({ column }) => (
         <button className="flex items-center gap-1 hover:text-foreground" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>
-          Labour <ArrowUpDownIcon className="size-3" />
+          Total F <ArrowUpDownIcon className="size-3" />
         </button>
       ),
-      cell: ({ row }) => inr(row.original.labour),
+      cell: ({ row }) => inr(row.original.total_f),
     },
     {
       id: "actions",
@@ -223,11 +170,7 @@ export default function JavakPage() {
             variant="outline"
             size="icon"
             className="size-8"
-            onClick={() =>
-              router.push(
-                `/dashboard/invoice/javak/${row.original.type === "g" ? "ghat" : "wastage"}?id=${row.original.id}`,
-              )
-            }
+            onClick={() => router.push(`/dashboard/invoice/garanu/add?id=${row.original.id}`)}
           >
             <PencilIcon className="size-3.5" />
           </Button>
@@ -240,20 +183,13 @@ export default function JavakPage() {
           >
             <Trash2Icon className="size-3.5" />
           </Button>
-          <Button
-            size="icon"
-            className="size-8 bg-blue-500 text-white hover:bg-blue-600"
-            onClick={() => router.push(`/dashboard/invoice/javak/print/${row.original.id}`)}
-          >
-            <EyeIcon className="size-3.5" />
-          </Button>
         </div>
       ),
     },
   ]
 
   const table = useReactTable({
-    data: javaks,
+    data: garanus,
     columns,
     state: { sorting, globalFilter },
     onSortingChange: setSorting,
@@ -272,20 +208,16 @@ export default function JavakPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-6 p-6">
-      {/* breadcrumb */}
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold">JAVAK</h1>
-        <p className="text-sm text-muted-foreground">Om Casting &rsaquo; Javak</p>
+        <h1 className="text-xl font-semibold">GARANU</h1>
+        <p className="text-sm text-muted-foreground">Om Casting &rsaquo; Garanu</p>
       </div>
 
       <div className="rounded-lg border bg-card p-4">
-        {/* top action buttons */}
         <div className="mb-4 flex flex-wrap gap-2">
-          <Button onClick={() => router.push("/dashboard/invoice/javak/wastage")}>Javak Wastage</Button>
-          <Button onClick={() => router.push("/dashboard/invoice/javak/ghat")}>Javak Ghat</Button>
+          <Button onClick={() => router.push("/dashboard/invoice/garanu/add")}>Add Garanu</Button>
         </div>
 
-        {/* toolbar */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={handlePrint}>
@@ -324,7 +256,6 @@ export default function JavakPage() {
           </div>
         </div>
 
-        {/* table */}
         <div className="overflow-hidden rounded border">
           <Table>
             <TableHeader className="bg-muted">
@@ -342,7 +273,7 @@ export default function JavakPage() {
               {table.getRowModel().rows.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">
-                    No javaks found.
+                    No garanus found.
                   </TableCell>
                 </TableRow>
               ) : (
@@ -360,11 +291,8 @@ export default function JavakPage() {
           </Table>
         </div>
 
-        {/* footer */}
         <div className="mt-3 flex items-center justify-between text-sm text-muted-foreground">
-          <span>
-            Showing {from} to {to} of {totalFiltered} entries
-          </span>
+          <span>Showing {from} to {to} of {totalFiltered} entries</span>
           <div className="flex items-center gap-1">
             <Button variant="outline" size="sm" className="h-8" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>
               Previous
@@ -379,7 +307,6 @@ export default function JavakPage() {
         </div>
       </div>
 
-      {/* copyright footer */}
       <div className="mt-auto flex items-center justify-between border-t pt-4 text-xs text-muted-foreground">
         <span>2020 - 2026 &copy; OM CASTING</span>
         <span>POWERED BY LARK INFOWAY.</span>
