@@ -8,31 +8,24 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { downloadElementAsPdf, safeFileName } from "@/lib/download-pdf"
 
-type JavakItem = {
+type AavakItem = {
   item: string
-  gross_w: number
-  bag_w: number
-  net_w: number
-  ghat?: number
-  weight?: number
-  touch: number
-  wastage?: number
+  gr_wt: number
   fine: number
-  rate: number
   amount: number
 }
 
-type Javak = {
+type Aavak = {
   id: number
-  type: string
-  bill_type: string
   inv_date: string
   invoice_no: string
   party: string
   city?: string | null
-  items: JavakItem[]
+  items: AavakItem[]
   fine: string
-  labour: string
+  amount: string
+  roundoff_fine: string
+  roundoff_amount: string
   previous_amount: string
   previous_fine: string
   closing_amount: string
@@ -47,7 +40,6 @@ function fmtDate(iso: string) {
   return `${d}/${m}/${y}`
 }
 
-const n2 = (v: unknown) => Number(v).toFixed(2)
 const n0 = (v: unknown) => String(Math.round(Number(v)))
 
 /** A signed balance -> magnitude + cr/dr tag (never shows a minus sign). */
@@ -55,57 +47,54 @@ function bal(value: number, positive: "cr" | "dr", negative: "cr" | "dr") {
   return `${Math.abs(Math.round(value))} ${value >= 0 ? positive : negative}`
 }
 
-export default function JavakInvoicePage() {
+export default function AavakInvoicePage() {
   const router = useRouter()
   const params = useParams<{ id: string }>()
   const id = params.id
-  const [javak, setJavak] = React.useState<Javak | null>(null)
+  const [aavak, setAavak] = React.useState<Aavak | null>(null)
   const [loading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
     if (!id) return
-    fetch(`/api/javaks/${id}`)
+    fetch(`/api/aavaks/${id}`)
       .then(async (r) => {
         const d = await r.json()
         if (!r.ok) throw new Error(d.error ?? "Failed to load")
-        setJavak(d)
+        setAavak(d)
       })
       .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load"))
       .finally(() => setLoading(false))
   }, [id])
 
   if (loading) return <div className="p-6 text-sm text-muted-foreground">Loading…</div>
-  if (!javak) return <div className="p-6 text-sm text-muted-foreground">Javak not found.</div>
+  if (!aavak) return <div className="p-6 text-sm text-muted-foreground">Aavak not found.</div>
 
-  const items = javak.items ?? []
-  const isGhat = javak.type === "g"
-  const totalGross = items.reduce((s, it) => s + Number(it.gross_w), 0)
-  const totalNet = items.reduce((s, it) => s + Number(it.net_w), 0)
-  const totalWeight = items.reduce((s, it) => s + Number(it.weight ?? 0), 0)
-  const totalFine = Number(javak.fine)
-  const totalAmount = Number(javak.labour)
+  const items = aavak.items ?? []
+  const totalGross = items.reduce((s, it) => s + Number(it.gr_wt), 0)
+  const totalFine = Number(aavak.fine)
+  const totalAmount = Number(aavak.amount)
 
   return (
     <div className="flex flex-1 flex-col items-center gap-4 bg-muted/40 p-6 print:bg-white print:p-0">
-      {/* Only #javak-invoice prints. */}
+      {/* Only #aavak-invoice prints. */}
       <style>{`
         @media print {
           body * { visibility: hidden !important; }
-          #javak-invoice, #javak-invoice * { visibility: visible !important; }
-          #javak-invoice { position: absolute; top: 0; left: 0; width: 100%; }
+          #aavak-invoice, #aavak-invoice * { visibility: visible !important; }
+          #aavak-invoice { position: absolute; top: 0; left: 0; width: 100%; }
         }
       `}</style>
 
       {/* toolbar (auto-hidden when printing) */}
       <div className="flex w-full max-w-[820px] items-center justify-between">
-        <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/invoice/javak")}>
+        <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/invoice/aavak")}>
           <ArrowLeftIcon className="size-4" /> Back
         </Button>
         <div className="flex gap-2">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => downloadElementAsPdf("javak-invoice", safeFileName(`Javak-${javak.invoice_no}.pdf`))}
+            onClick={() => downloadElementAsPdf("aavak-invoice", safeFileName(`Aavak-${aavak.invoice_no}.pdf`))}
           >
             <DownloadIcon className="size-4" /> Download PDF
           </Button>
@@ -115,26 +104,20 @@ export default function JavakInvoicePage() {
         </div>
       </div>
 
-      <div id="javak-invoice" className="flex w-full max-w-[820px] flex-col gap-4 overflow-x-auto">
+      <div id="aavak-invoice" className="flex w-full max-w-[820px] flex-col gap-4 overflow-x-auto">
         <InvoiceCopy
           copyLabel="Original"
-          javak={javak}
+          aavak={aavak}
           items={items}
-          isGhat={isGhat}
           totalGross={totalGross}
-          totalNet={totalNet}
-          totalWeight={totalWeight}
           totalFine={totalFine}
           totalAmount={totalAmount}
         />
         <InvoiceCopy
           copyLabel="Duplicate"
-          javak={javak}
+          aavak={aavak}
           items={items}
-          isGhat={isGhat}
           totalGross={totalGross}
-          totalNet={totalNet}
-          totalWeight={totalWeight}
           totalFine={totalFine}
           totalAmount={totalAmount}
         />
@@ -145,22 +128,16 @@ export default function JavakInvoicePage() {
 
 function InvoiceCopy({
   copyLabel,
-  javak,
+  aavak,
   items,
-  isGhat,
   totalGross,
-  totalNet,
-  totalWeight,
   totalFine,
   totalAmount,
 }: {
   copyLabel: string
-  javak: Javak
-  items: JavakItem[]
-  isGhat: boolean
+  aavak: Aavak
+  items: AavakItem[]
   totalGross: number
-  totalNet: number
-  totalWeight: number
   totalFine: number
   totalAmount: number
 }) {
@@ -179,7 +156,7 @@ function InvoiceCopy({
 
       {/* estimate / copy */}
       <div className="relative border-b border-black pb-1">
-        <div className="text-center text-sm font-semibold">Estimate</div>
+        <div className="text-center text-sm font-semibold">Aavak</div>
         <div className="absolute right-3 top-0 text-xs">{copyLabel}</div>
       </div>
 
@@ -188,18 +165,18 @@ function InvoiceCopy({
         <div className="border-r border-black">
           <div className="flex border-b border-black">
             <span className="w-14 border-r border-black px-2 py-1 font-medium">M/s.</span>
-            <span className="px-2 py-1 font-semibold text-blue-700">{javak.party}</span>
+            <span className="px-2 py-1 font-semibold text-blue-700">{aavak.party}</span>
           </div>
           <div className="flex">
             <span className="w-14 border-r border-black px-2 py-1 font-medium">City</span>
-            <span className="px-2 py-1">{javak.city ?? "RAJKOT"}</span>
+            <span className="px-2 py-1">{aavak.city ?? "RAJKOT"}</span>
           </div>
         </div>
         <div>
           <div className="border-b border-black px-2 py-1">
-            No :&nbsp;<span className="font-semibold text-blue-700">{javak.invoice_no}</span>
+            No :&nbsp;<span className="font-semibold text-blue-700">{aavak.invoice_no}</span>
           </div>
-          <div className="px-2 py-1">Date :&nbsp;{fmtDate(javak.inv_date)}</div>
+          <div className="px-2 py-1">Date :&nbsp;{fmtDate(aavak.inv_date)}</div>
         </div>
       </div>
 
@@ -209,25 +186,9 @@ function InvoiceCopy({
           <tr className="font-semibold">
             <th className={cell}>Sr.</th>
             <th className={`${cell} text-left`}>Product Name.</th>
-            <th className={cell}>G Weight</th>
-            <th className={cell}>Bag Weight</th>
-            <th className={cell}>Net Weight</th>
-            {isGhat ? (
-              <>
-                <th className={cell}>Ghat</th>
-                <th className={cell}>Weight</th>
-                <th className={cell}>Touch</th>
-              </>
-            ) : (
-              <>
-                <th className={cell}>Touch</th>
-                <th className={cell}>Wastage</th>
-                <th className={cell}>T + W</th>
-              </>
-            )}
+            <th className={cell}>Gr Weight</th>
             <th className={cell}>Fine</th>
-            <th className={cell}>Rate</th>
-            <th className={cell}>Net Amount</th>
+            <th className={cell}>Amount</th>
           </tr>
         </thead>
         <tbody>
@@ -235,31 +196,15 @@ function InvoiceCopy({
             <tr key={i}>
               <td className={cell}>{i + 1}</td>
               <td className={`${cell} text-left font-semibold text-blue-700`}>{it.item}</td>
-              <td className={cell}>{n0(it.gross_w)}</td>
-              <td className={cell}>{n0(it.bag_w)}</td>
-              <td className={cell}>{n0(it.net_w)}</td>
-              {isGhat ? (
-                <>
-                  <td className={cell}>{n0(it.ghat)}</td>
-                  <td className={cell}>{n0(it.weight)}</td>
-                  <td className={cell}>{n2(it.touch)}</td>
-                </>
-              ) : (
-                <>
-                  <td className={cell}>{n2(it.touch)}</td>
-                  <td className={cell}>{n2(it.wastage)}</td>
-                  <td className={cell}>{n2(Number(it.touch) + Number(it.wastage ?? 0))}</td>
-                </>
-              )}
+              <td className={cell}>{n0(it.gr_wt)}</td>
               <td className={cell}>{n0(it.fine)}</td>
-              <td className={cell}>{n0(it.rate)}</td>
               <td className={cell}>{n0(it.amount)}</td>
             </tr>
           ))}
           {/* pad to keep a consistent body height */}
           {Array.from({ length: Math.max(0, 6 - items.length) }).map((_, i) => (
             <tr key={`pad-${i}`}>
-              {Array.from({ length: 11 }).map((__, c) => (
+              {Array.from({ length: 5 }).map((__, c) => (
                 <td key={c} className={cell}>&nbsp;</td>
               ))}
             </tr>
@@ -268,43 +213,25 @@ function InvoiceCopy({
           <tr className="font-semibold">
             <td className={cell} colSpan={2}>TOTAL</td>
             <td className={cell}>{n0(totalGross)}</td>
-            <td className={cell}></td>
-            <td className={cell}>{n0(totalNet)}</td>
-            {isGhat ? (
-              <>
-                <td className={cell}></td>
-                <td className={cell}>{n0(totalWeight)}</td>
-                <td className={cell}></td>
-              </>
-            ) : (
-              <>
-                <td className={cell}></td>
-                <td className={cell}></td>
-                <td className={cell}></td>
-              </>
-            )}
             <td className={cell}>{n0(totalFine)}</td>
-            <td className={cell}></td>
             <td className={cell}>{n0(totalAmount)}</td>
           </tr>
           {/* remark + previous balance */}
           <tr>
-            <td className={`${cell} text-left align-top`} colSpan={5} rowSpan={2}>
-              {javak.remark ? (
-                <span><span className="font-semibold text-red-600">Remark :</span> {javak.remark}</span>
+            <td className={`${cell} text-left align-top`} colSpan={2} rowSpan={2}>
+              {aavak.remark ? (
+                <span><span className="font-semibold text-red-600">Remark :</span> {aavak.remark}</span>
               ) : null}
             </td>
-            <td className={`${cell} text-right`} colSpan={3}>Previous Balance</td>
-            <td className={`${cell} text-blue-700`}>{bal(Number(javak.previous_fine), "cr", "dr")}</td>
-            <td className={cell}></td>
-            <td className={`${cell} text-blue-700`}>{bal(Number(javak.previous_amount), "cr", "dr")}</td>
+            <td className={`${cell} text-right`}>Previous Balance</td>
+            <td className={`${cell} text-blue-700`}>{bal(Number(aavak.previous_fine), "cr", "dr")}</td>
+            <td className={`${cell} text-blue-700`}>{bal(Number(aavak.previous_amount), "cr", "dr")}</td>
           </tr>
           {/* closing balance */}
           <tr>
-            <td className={`${cell} text-right`} colSpan={3}>Closing Balance</td>
-            <td className={`${cell} text-blue-700`}>{bal(Number(javak.closing_fine), "cr", "dr")}</td>
-            <td className={cell}></td>
-            <td className={`${cell} text-blue-700`}>{bal(Number(javak.closing_amount), "cr", "dr")}</td>
+            <td className={`${cell} text-right`}>Closing Balance</td>
+            <td className={`${cell} text-blue-700`}>{bal(Number(aavak.closing_fine), "cr", "dr")}</td>
+            <td className={`${cell} text-blue-700`}>{bal(Number(aavak.closing_amount), "cr", "dr")}</td>
           </tr>
         </tbody>
       </table>

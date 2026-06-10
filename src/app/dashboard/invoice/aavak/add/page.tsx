@@ -8,6 +8,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { BalanceInput } from "@/components/balance-input"
 import {
   Select,
   SelectContent,
@@ -109,6 +110,21 @@ function AavakAddPage() {
       })
       .catch((e) => toast.error(e instanceof Error ? e.message : "Failed to load"))
   }, [editId])
+
+  // ── auto-fill previous balance from the party's last entry (new entries only) ──
+  React.useEffect(() => {
+    if (editId || !party) return
+    let cancelled = false
+    fetch(`/api/ledger/last?party=${encodeURIComponent(party)}`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (cancelled || !d) return
+        setPreviousAmount(String(d.previous_amount ?? 0))
+        setPreviousFine(String(d.previous_fine ?? 0))
+      })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [party, editId])
 
   // ── derived values ──
   // Aavak fine intake equals the gross (fine) weight of each item.
@@ -283,11 +299,11 @@ function AavakAddPage() {
             </div>
             <div className="grid grid-cols-[130px_1fr] items-center gap-3">
               <Label className="text-sm">Previous Amount</Label>
-              <Input type="number" value={previousAmount} onChange={(e) => setPreviousAmount(e.target.value)} />
+              <BalanceInput value={previousAmount} onChange={setPreviousAmount} />
             </div>
             <div className="grid grid-cols-[130px_1fr] items-center gap-3">
               <Label className="text-sm">Previous Fine</Label>
-              <Input type="number" value={previousFine} onChange={(e) => setPreviousFine(e.target.value)} />
+              <BalanceInput value={previousFine} onChange={setPreviousFine} />
             </div>
           </div>
 
@@ -318,11 +334,11 @@ function AavakAddPage() {
             </div>
             <div className="grid grid-cols-[140px_1fr] items-center gap-3">
               <Label className="text-sm">Closing Amount</Label>
-              <Input value={`${closingAmount} ${closingAmount >= 0 ? "cr" : "db"}`} readOnly className="bg-muted" />
+              <Input value={`${Math.abs(closingAmount)} ${closingAmount >= 0 ? "cr" : "dr"}`} readOnly className="bg-muted" />
             </div>
             <div className="grid grid-cols-[140px_1fr] items-center gap-3">
               <Label className="text-sm">Closing Fine</Label>
-              <Input value={`${closingFine} ${closingFine >= 0 ? "cr" : "db"}`} readOnly className="bg-muted" />
+              <Input value={`${Math.abs(closingFine)} ${closingFine >= 0 ? "cr" : "dr"}`} readOnly className="bg-muted" />
             </div>
           </div>
         </div>

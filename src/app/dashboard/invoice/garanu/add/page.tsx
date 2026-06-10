@@ -28,7 +28,6 @@ const num = (v: unknown) => {
   const n = Number(v)
   return Number.isFinite(n) ? n : 0
 }
-const round2 = (n: number) => Math.round(n * 100) / 100
 
 /** Copper touch rate — assumed constant (read-only in the form). */
 const COPPER_TOUCH = 2.5
@@ -105,18 +104,27 @@ function GaranuAddPage() {
   const fine = computedItems.reduce((s, it) => s + it.fine, 0)
   const gWeight = computedItems.reduce((s, it) => s + num(it.gr_wt), 0)
 
-  const rCopper = Math.round(gWeight * num(mTouch) / 100) - gWeight
+  // m_touch2 is kept in sync with M TOUCH (the target/second-melting touch).
+  const mt2 = num(mTouch2)
+  // Weight that would hold `fine` pure gold at the target touch.
+  const needWeight = mt2 > 0 ? Math.round(fine * 100 / mt2) : 0
+  // Copper/alloy part of the lot.
+  const rCopper = needWeight >= gWeight ? needWeight - gWeight : gWeight - fine
   const copperF1 = Math.round(rCopper * COPPER_TOUCH / 100)
   const copperF2 = copperF1
   const fine2 = fine
   const totalF = fine2 + copperF2
   const fBaad2 = gWeight
+  const rGaranu = gWeight + rCopper
 
-  // These three depend on the 2nd melting touch (m_touch2); blank until entered.
-  const hasM2 = mTouch2.trim() !== "" && num(mTouch2) !== 0
-  const rGaranu = hasM2 ? round2(Math.round(gWeight * num(mTouch2) / 100) - gWeight) : ""
-  const garanu = "" // TODO: needs a filled example to derive
-  const finalCopper = "" // TODO: needs a filled example to derive
+  // Garanu = final lot weight after mixing copper (touch COPPER_TOUCH) to reach
+  // the target touch; Final Copper is the copper added (negative = removed).
+  const mt = mt2 / 100
+  const ct = COPPER_TOUCH / 100
+  const hasTarget = mt2 > 0 && Math.abs(mt - ct) > 1e-9
+  const garanuNum = Math.round(gWeight + (fine - gWeight * mt) / (mt - ct))
+  const garanu: number | "" = hasTarget ? garanuNum : ""
+  const finalCopper: number | "" = hasTarget ? garanuNum - gWeight : ""
 
   // ── row helpers ──
   const setItem = (i: number, patch: Partial<ItemRow>) =>
@@ -259,14 +267,14 @@ function GaranuAddPage() {
           <Row label="Fine"><Ro value={fine} /></Row>
           <Row label="copper_f2"><Ro value={copperF2} /></Row>
 
-          <Row label="M TOUCH"><Input type="number" value={mTouch} onChange={(e) => setMTouch(e.target.value)} /></Row>
+          <Row label="M TOUCH"><Input type="number" value={mTouch} onChange={(e) => { setMTouch(e.target.value); setMTouch2(e.target.value) }} /></Row>
           <Row label="fine2"><Ro value={fine2} /></Row>
 
           <Row label="r_garanu"><Ro value={rGaranu} /></Row>
           <Row label="total_f"><Ro value={totalF} /></Row>
 
           <Row label="gWeight"><Ro value={gWeight} /></Row>
-          <Row label="m_touch2"><Input type="number" value={mTouch2} onChange={(e) => setMTouch2(e.target.value)} placeholder="m_touch2" /></Row>
+          <Row label="m_touch2"><Input type="number" value={mTouch2} onChange={(e) => { setMTouch2(e.target.value); setMTouch(e.target.value) }} placeholder="m_touch2" /></Row>
 
           <Row label="r_copper"><Ro value={rCopper} /></Row>
           <Row label="Garanu"><Ro value={garanu} /></Row>

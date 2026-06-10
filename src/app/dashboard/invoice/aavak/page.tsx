@@ -12,7 +12,7 @@ import {
   type ColumnDef,
   type SortingState,
 } from "@tanstack/react-table"
-import { ArrowUpDownIcon, PencilIcon, Trash2Icon, PrinterIcon, CopyIcon, FileSpreadsheetIcon } from "lucide-react"
+import { ArrowUpDownIcon, PencilIcon, Trash2Icon, PrinterIcon, CopyIcon, FileSpreadsheetIcon, EyeIcon } from "lucide-react"
 import { toast } from "sonner"
 
 import { useConfirm } from "@/components/confirm-dialog"
@@ -193,6 +193,13 @@ export default function AavakPage() {
             onClick={() => handleDelete(row.original.id)}
           >
             <Trash2Icon className="size-3.5" />
+          </Button>
+          <Button
+            size="icon"
+            className="size-8 bg-blue-500 text-white hover:bg-blue-600"
+            onClick={() => router.push(`/dashboard/invoice/aavak/print/${row.original.id}`)}
+          >
+            <EyeIcon className="size-3.5" />
           </Button>
         </div>
       ),

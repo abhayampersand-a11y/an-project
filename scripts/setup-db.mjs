@@ -140,6 +140,13 @@ CREATE TABLE IF NOT EXISTS aavaks (
   created_at      TIMESTAMPTZ DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS sticky_notes (
+  id         SERIAL PRIMARY KEY,
+  party_name VARCHAR(200) NOT NULL,
+  content    TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS garanus (
   id           SERIAL PRIMARY KEY,
   inv_date     DATE NOT NULL DEFAULT CURRENT_DATE,

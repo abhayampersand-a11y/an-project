@@ -16,12 +16,10 @@ import {
   ChevronRightIcon,
 } from "lucide-react"
 
-import { NavUser } from "@/components/nav-user"
 import { OmCastingLogo } from "@/components/om-casting-logo"
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
@@ -110,12 +108,6 @@ const navItems: NavItem[] = [
     ],
   },
 ]
-
-const user = {
-  name: "Admin",
-  email: "admin@omcasting.com",
-  avatar: "",
-}
 
 function NavItem({ item, pathname }: { item: NavItem; pathname: string }) {
   const isActive = item.url !== "#" && pathname === item.url
@@ -217,10 +209,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
           ))}
         </SidebarMenu>
       </SidebarContent>
-
-      <SidebarFooter>
-        <NavUser user={user} />
-      </SidebarFooter>
     </Sidebar>
   )
 }

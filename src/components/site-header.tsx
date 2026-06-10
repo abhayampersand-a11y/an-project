@@ -1,4 +1,5 @@
 import { ModeToggle } from "@/components/mode-toggle"
+import { HeaderUserMenu } from "@/components/header-user-menu"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
@@ -14,6 +15,7 @@ export function SiteHeader() {
         <h1 className="text-base font-medium">Om Casting</h1>
         <div className="ml-auto flex items-center gap-2">
           <ModeToggle />
+          <HeaderUserMenu />
         </div>
       </div>
     </header>
