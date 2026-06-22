@@ -34,7 +34,7 @@ function fmtDate(iso: string) {
   return `${d}/${m}/${y}`
 }
 
-const inr = (v: number) => v.toLocaleString("en-IN")
+const inr = (v: number) => `₹${v.toLocaleString("en-IN")}`
 
 export default function RsDailyRojmedPage() {
   const [date, setDate] = React.useState(todayISO())
@@ -90,7 +90,7 @@ export default function RsDailyRojmedPage() {
             <div className="font-semibold">party Statement For</div>
             <div className="text-muted-foreground">of : {fmtDate(stmt.date)}</div>
             <div className="font-semibold">Opening Balance rs</div>
-            <div className="text-muted-foreground">of : {inr(stmt.opening)}</div>
+            <div className="text-muted-foreground">of : {inr(Math.abs(stmt.opening))} {stmt.openingLabel}</div>
           </div>
 
           <div className="grid gap-8 lg:grid-cols-2">
@@ -100,7 +100,7 @@ export default function RsDailyRojmedPage() {
               <table className="w-full text-sm">
                 <tbody>
                   <tr>
-                    <td className="py-1 text-right tabular-nums">{inr(stmt.opening)}</td>
+                    <td className="py-1 text-right tabular-nums">{inr(Math.abs(stmt.opening))}</td>
                     <td className="py-1 pl-3 text-muted-foreground">{stmt.openingLabel} Opening Balance</td>
                   </tr>
                   <tr>
@@ -116,7 +116,7 @@ export default function RsDailyRojmedPage() {
                     <td />
                   </tr>
                   <tr className="border-t font-semibold">
-                    <td className="py-1 text-right tabular-nums text-primary">{inr(stmt.closing)}</td>
+                    <td className="py-1 text-right tabular-nums text-primary">{inr(Math.abs(stmt.closing))}</td>
                     <td className="py-1 pl-3 text-muted-foreground">{stmt.closingLabel} closing balance</td>
                   </tr>
                 </tbody>

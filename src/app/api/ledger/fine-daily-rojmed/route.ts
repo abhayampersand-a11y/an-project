@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
       creditTotal,
       debitTotal,
       closing,
-      closingLabel: creditTotal - debitTotal >= 0 ? "db" : "cr",
+      closingLabel: closing >= 0 ? "cr" : "db",
     });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Query failed" }, { status: 500 });
