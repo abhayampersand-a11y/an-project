@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { BalanceInput } from "@/components/balance-input"
+import { SearchableSelect } from "@/components/searchable-select"
 import {
   Select,
   SelectContent,
@@ -296,24 +297,14 @@ function JavakGhatPage() {
             </div>
             <div className="grid grid-cols-[110px_1fr] items-center gap-3">
               <Label className="text-sm">Party</Label>
-              <Select
+              <SearchableSelect
                 value={party}
-                onValueChange={(v) => { if (v) setParty(v) }}
-                items={parties.map((p) => ({ label: p, value: p }))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select party" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {parties.length === 0 ? (
-                      <SelectItem value="__none" disabled>No parties</SelectItem>
-                    ) : (
-                      parties.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)
-                    )}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+                onValueChange={setParty}
+                options={parties}
+                placeholder="Select party"
+                emptyText="No parties"
+                className="w-full"
+              />
             </div>
           </div>
 
