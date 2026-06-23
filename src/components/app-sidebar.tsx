@@ -103,6 +103,7 @@ const navItems: NavItem[] = [
     url: "#",
     icon: <HardDriveIcon />,
     children: [
+      { title: "Financial Year", url: "/dashboard/backup/financial-year" },
       { title: "Javak", url: "#" },
       { title: "Aavak", url: "#" },
     ],

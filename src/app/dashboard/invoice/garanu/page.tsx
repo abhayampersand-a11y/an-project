@@ -16,6 +16,7 @@ import { ArrowUpDownIcon, PencilIcon, Trash2Icon, PrinterIcon, CopyIcon, FileSpr
 import { toast } from "sonner"
 
 import { useConfirm } from "@/components/confirm-dialog"
+import { useActiveFinancialYear, filterByFinancialYear } from "@/lib/use-financial-year"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -59,6 +60,8 @@ export default function GaranuPage() {
   const [deletingId, setDeletingId] = React.useState<number | null>(null)
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = React.useState("")
+  const fy = useActiveFinancialYear()
+  const shown = React.useMemo(() => filterByFinancialYear(garanus, "inv_date", fy), [garanus, fy])
 
   React.useEffect(() => {
     fetch("/api/garanus")
@@ -97,7 +100,7 @@ export default function GaranuPage() {
   }
 
   function handleCopy() {
-    const text = garanus
+    const text = shown
       .map((g, i) => `${i + 1}\t${fmtDate(g.inv_date)}\t${g.party}\t${g.fine}\t${g.total_f}`)
       .join("\n")
     navigator.clipboard.writeText(`#\tDate\tParty\tFine\tTotal F\n${text}`)
@@ -106,7 +109,7 @@ export default function GaranuPage() {
 
   function handleExcel() {
     const header = "#,Date,Party,Fine,Total F"
-    const rows = garanus.map((g, i) => `${i + 1},${fmtDate(g.inv_date)},"${g.party}",${g.fine},${g.total_f}`)
+    const rows = shown.map((g, i) => `${i + 1},${fmtDate(g.inv_date)},"${g.party}",${g.fine},${g.total_f}`)
     const csv = [header, ...rows].join("\n")
     const blob = new Blob([csv], { type: "text/csv" })
     const url = URL.createObjectURL(blob)
@@ -189,7 +192,7 @@ export default function GaranuPage() {
   ]
 
   const table = useReactTable({
-    data: garanus,
+    data: shown,
     columns,
     state: { sorting, globalFilter },
     onSortingChange: setSorting,

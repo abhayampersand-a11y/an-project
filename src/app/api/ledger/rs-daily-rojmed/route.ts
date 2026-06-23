@@ -5,6 +5,7 @@ export const dynamic = "force-dynamic";
 
 type Entry = { account: string; rs: number; remark: string };
 type PayRow = { d: string; party: string; bill_type: string; rs: string; remark: string | null };
+type AavakRow = { d: string; party: string; amount: string; remark: string | null };
 
 const n = (v: unknown) => {
   const x = Number(v);
@@ -17,31 +18,39 @@ export async function GET(req: NextRequest) {
   if (!date) return NextResponse.json({ error: "Date is required" }, { status: 400 });
 
   try {
-    // RS daybook is payments-only (cash in / out).
-    const payRes = await query<PayRow>(
-      "SELECT to_char(pay_date,'YYYY-MM-DD') AS d, party, bill_type, rs, remark FROM payments WHERE rs <> 0",
-      [],
-    );
+    // RS daybook: payments (cash in / out) on both sides, plus invoice aavak
+    // (amount) on the credit side only. Invoice javak is intentionally excluded.
+    const [payRes, aavakRes] = await Promise.all([
+      query<PayRow>(
+        "SELECT to_char(pay_date,'YYYY-MM-DD') AS d, party, bill_type, rs, remark FROM payments WHERE rs <> 0",
+        [],
+      ),
+      query<AavakRow>(
+        "SELECT to_char(inv_date,'YYYY-MM-DD') AS d, party, amount, remark FROM aavaks WHERE amount <> 0",
+        [],
+      ),
+    ]);
 
     let openCredit = 0;
     let openDebit = 0;
     const dayCredit = new Map<string, { rs: number; remarks: Set<string> }>();
     const dayDebit = new Map<string, { rs: number; remarks: Set<string> }>();
 
-    for (const p of payRes.rows) {
-      const side = p.bill_type === "Debit" ? "debit" : "credit";
-      const rs = n(p.rs);
-      if (rs === 0) continue;
-      if (p.d < date) {
+    function handle(side: "credit" | "debit", d: string, party: string, rs: number, remark: string) {
+      if (rs === 0) return;
+      if (d < date) {
         if (side === "credit") openCredit += rs; else openDebit += rs;
-      } else if (p.d === date) {
+      } else if (d === date) {
         const map = side === "credit" ? dayCredit : dayDebit;
-        const cur = map.get(p.party) ?? { rs: 0, remarks: new Set<string>() };
+        const cur = map.get(party) ?? { rs: 0, remarks: new Set<string>() };
         cur.rs += rs;
-        if (p.remark) cur.remarks.add(p.remark);
-        map.set(p.party, cur);
+        if (remark) cur.remarks.add(remark);
+        map.set(party, cur);
       }
     }
+
+    for (const p of payRes.rows) handle(p.bill_type === "Debit" ? "debit" : "credit", p.d, p.party, n(p.rs), p.remark ?? "");
+    for (const a of aavakRes.rows) handle("credit", a.d, a.party, n(a.amount), a.remark ?? "");
 
     const toList = (map: Map<string, { rs: number; remarks: Set<string> }>): Entry[] =>
       [...map.entries()]

@@ -33,6 +33,14 @@ export default function RootLayout({
       className={`${inter.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <script
+          // Set the theme class before paint to avoid a flash of the wrong
+          // theme. Server-rendered, so it runs on first load without React
+          // warning about client-rendered inline scripts.
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var d=document.documentElement;var t=localStorage.getItem('theme')||'light';if(t==='system'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}d.classList.remove('light','dark');d.classList.add(t);d.style.colorScheme=t;}catch(e){}})();`,
+          }}
+        />
           <ThemeProvider
             attribute="class"
             defaultTheme="light"

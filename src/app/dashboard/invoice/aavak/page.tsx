@@ -16,6 +16,7 @@ import { ArrowUpDownIcon, PencilIcon, Trash2Icon, PrinterIcon, CopyIcon, FileSpr
 import { toast } from "sonner"
 
 import { useConfirm } from "@/components/confirm-dialog"
+import { useActiveFinancialYear, filterByFinancialYear } from "@/lib/use-financial-year"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -60,6 +61,8 @@ export default function AavakPage() {
   const [deletingId, setDeletingId] = React.useState<number | null>(null)
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = React.useState("")
+  const fy = useActiveFinancialYear()
+  const shown = React.useMemo(() => filterByFinancialYear(aavaks, "inv_date", fy), [aavaks, fy])
 
   React.useEffect(() => {
     fetch("/api/aavaks")
@@ -98,7 +101,7 @@ export default function AavakPage() {
   }
 
   function handleCopy() {
-    const text = aavaks
+    const text = shown
       .map((a, i) => `${i + 1}\t${fmtDate(a.inv_date)}\t${a.invoice_no}\t${a.party}\t${a.fine}\t${a.amount}`)
       .join("\n")
     navigator.clipboard.writeText(`#\tDate\tNo\tM/s\tFine\tAmount\n${text}`)
@@ -107,7 +110,7 @@ export default function AavakPage() {
 
   function handleExcel() {
     const header = "#,Date,No,M/s,Fine,Amount"
-    const rows = aavaks.map(
+    const rows = shown.map(
       (a, i) => `${i + 1},${fmtDate(a.inv_date)},${a.invoice_no},"${a.party}",${a.fine},${a.amount}`,
     )
     const csv = [header, ...rows].join("\n")
@@ -207,7 +210,7 @@ export default function AavakPage() {
   ]
 
   const table = useReactTable({
-    data: aavaks,
+    data: shown,
     columns,
     state: { sorting, globalFilter },
     onSortingChange: setSorting,

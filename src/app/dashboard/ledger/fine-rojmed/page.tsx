@@ -7,14 +7,8 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { SearchableSelect } from "@/components/searchable-select"
+import { useFinancialYearRange } from "@/lib/use-financial-year"
 
 type Entry = { date: string; fine: number; remark: string }
 type Statement = {
@@ -48,8 +42,7 @@ const bal = (v: number) => `${Math.abs(v).toLocaleString("en-IN")} ${v >= 0 ? "c
 export default function FineRojmedPage() {
   const [parties, setParties] = React.useState<string[]>([])
   const [party, setParty] = React.useState("")
-  const [from, setFrom] = React.useState(`${new Date().getFullYear()}-01-01`)
-  const [to, setTo] = React.useState(todayISO())
+  const { from, setFrom, to, setTo } = useFinancialYearRange("2025-10-22", todayISO())
   const [loading, setLoading] = React.useState(false)
   const [stmt, setStmt] = React.useState<Statement | null>(null)
 
@@ -90,22 +83,14 @@ export default function FineRojmedPage() {
         <div className="grid items-end gap-5 md:grid-cols-[1fr_1fr_auto]">
           <div className="flex flex-col gap-2">
             <Label className="text-sm">Party <span className="text-destructive">*</span></Label>
-            <Select
+            <SearchableSelect
               value={party}
-              onValueChange={(v) => { if (v) setParty(v) }}
-              items={parties.map((p) => ({ label: p, value: p }))}
-            >
-              <SelectTrigger className="w-full"><SelectValue placeholder="Select party" /></SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  {parties.length === 0 ? (
-                    <SelectItem value="__none" disabled>No parties</SelectItem>
-                  ) : (
-                    parties.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)
-                  )}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
+              onValueChange={setParty}
+              options={parties}
+              placeholder="Select party"
+              emptyText="No parties"
+              className="w-full"
+            />
           </div>
           <div className="flex flex-col gap-2">
             <Label className="text-sm">Date <span className="text-destructive">*</span></Label>

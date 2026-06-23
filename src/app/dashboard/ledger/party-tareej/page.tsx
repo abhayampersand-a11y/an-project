@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { SearchableSelect } from "@/components/searchable-select"
+import { useFinancialYearRange } from "@/lib/use-financial-year"
 
 type Entry = { date: string; invoice: string; fine: number; amount: number; remark: string }
 type Statement = {
@@ -42,8 +43,7 @@ const bal = (v: number) => `${Math.abs(v).toLocaleString("en-IN")} ${v >= 0 ? "c
 export default function PartyTareejPage() {
   const [parties, setParties] = React.useState<string[]>([])
   const [party, setParty] = React.useState("")
-  const [from, setFrom] = React.useState("2025-10-22")
-  const [to, setTo] = React.useState(todayISO())
+  const { from, setFrom, to, setTo } = useFinancialYearRange("2025-10-22", todayISO())
   const [loading, setLoading] = React.useState(false)
   const [stmt, setStmt] = React.useState<Statement | null>(null)
 
@@ -129,27 +129,45 @@ export default function PartyTareejPage() {
 
           <div className="grid gap-8 lg:grid-cols-2">
             <Particulars title="Credit Particulars" entries={stmt.credit} total={stmt.creditTotal} />
-            <div className="flex flex-col gap-3">
-              <Particulars
-                title="Debit Particulars"
-                entries={
-                  stmt.opening.fine !== 0 || stmt.opening.amount !== 0
-                    ? [{ date: "", invoice: "", fine: stmt.opening.fine, amount: stmt.opening.amount, remark: "Opening Balance" }, ...stmt.debit]
-                    : stmt.debit
-                }
-                total={stmt.debitTotal}
-              />
-              {/* closing summary */}
-              <table className="w-full text-right text-sm">
-                <tbody>
-                  <tr className="text-muted-foreground">
-                    <td className="py-1 pr-4 text-left">Closing Balance</td>
-                    <td className="py-1 font-semibold text-primary">{bal(stmt.closing.fine)}</td>
-                    <td className="py-1 pl-6 font-semibold text-primary">{bal(stmt.closing.amount)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+            <Particulars
+              title="Debit Particulars"
+              entries={
+                stmt.opening.fine !== 0 || stmt.opening.amount !== 0
+                  ? [{ date: "", invoice: "", fine: stmt.opening.fine, amount: stmt.opening.amount, remark: "Opening Balance" }, ...stmt.debit]
+                  : stmt.debit
+              }
+              total={stmt.debitTotal}
+            />
+          </div>
+
+          {/* summary box */}
+          <div className="mt-6 flex justify-end">
+            <table className="min-w-[320px] border text-right text-sm">
+              <thead>
+                <tr className="border-b text-xs uppercase text-muted-foreground">
+                  <th className="px-4 py-1.5 text-right">Fine</th>
+                  <th className="px-4 py-1.5 text-right">Amount</th>
+                  <th className="px-4 py-1.5" />
+                </tr>
+              </thead>
+              <tbody>
+                <tr className="border-b border-dashed">
+                  <td className="px-4 py-1.5">{inr(stmt.creditTotal.fine)}</td>
+                  <td className="px-4 py-1.5">{inr(stmt.creditTotal.amount)}</td>
+                  <td className="px-4 py-1.5" />
+                </tr>
+                <tr className="border-b border-dashed">
+                  <td className="px-4 py-1.5">{inr(stmt.debitTotal.fine)}</td>
+                  <td className="px-4 py-1.5">{inr(stmt.debitTotal.amount)}</td>
+                  <td className="px-4 py-1.5" />
+                </tr>
+                <tr className="font-semibold">
+                  <td className="px-4 py-1.5 text-primary">{bal(stmt.closing.fine)}</td>
+                  <td className="px-4 py-1.5 text-primary">{bal(stmt.closing.amount)}</td>
+                  <td className="px-4 py-1.5 text-left text-muted-foreground">Closing Balance</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
           <div className="mt-6 flex justify-center">

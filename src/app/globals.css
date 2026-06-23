@@ -131,3 +131,39 @@
     @apply font-sans;
   }
 }
+
+/* Always print on a clean white sheet with dark text, even when the
+   app is being viewed in dark mode. Force the light-theme palette and
+   make sure backgrounds/colors are actually rendered by the printer. */
+@media print {
+  :root,
+  .dark {
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.21 0.02 264);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.21 0.02 264);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.21 0.02 264);
+    --primary: oklch(0.55 0.20 275);
+    --primary-foreground: oklch(0.985 0.01 270);
+    --secondary: oklch(0.945 0.012 256);
+    --secondary-foreground: oklch(0.30 0.03 265);
+    --muted: oklch(0.94 0.012 258);
+    --muted-foreground: oklch(0.40 0.02 262);
+    --accent: oklch(0.945 0.028 275);
+    --accent-foreground: oklch(0.40 0.12 275);
+    --border: oklch(0.80 0.011 258);
+    --input: oklch(0.80 0.011 258);
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}

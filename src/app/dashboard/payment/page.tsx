@@ -6,19 +6,13 @@ import { ArrowUpDownIcon, PencilIcon, Trash2Icon } from "lucide-react"
 import { toast } from "sonner"
 
 import { useConfirm } from "@/components/confirm-dialog"
+import { useActiveFinancialYear, filterByFinancialYear } from "@/lib/use-financial-year"
 import { ListTable } from "@/components/list-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { SearchableSelect } from "@/components/searchable-select"
 
 type Payment = {
   id: number
@@ -65,6 +59,8 @@ export default function PaymentPage() {
   const [editingId, setEditingId] = React.useState<number | null>(null)
   const [saving, setSaving] = React.useState(false)
   const [deletingId, setDeletingId] = React.useState<number | null>(null)
+  const fy = useActiveFinancialYear()
+  const shown = React.useMemo(() => filterByFinancialYear(payments, "pay_date", fy), [payments, fy])
 
   React.useEffect(() => {
     fetch("/api/payments")
@@ -300,24 +296,14 @@ export default function PaymentPage() {
             </div>
 
             <Field label="party" required>
-              <Select
+              <SearchableSelect
                 value={form.party}
-                onValueChange={(v) => { if (v) setForm((f) => ({ ...f, party: v })) }}
-                items={parties.map((p) => ({ label: p, value: p }))}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="None" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectGroup>
-                    {parties.length === 0 ? (
-                      <SelectItem value="__none" disabled>No parties</SelectItem>
-                    ) : (
-                      parties.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)
-                    )}
-                  </SelectGroup>
-                </SelectContent>
-              </Select>
+                onValueChange={(v) => setForm((f) => ({ ...f, party: v }))}
+                options={parties}
+                placeholder="None"
+                emptyText="No parties"
+                className="w-full"
+              />
             </Field>
 
             <Field label="Date" required>
@@ -374,7 +360,7 @@ export default function PaymentPage() {
         <div className="flex-1">
           <ListTable
             columns={columns as ColumnDef<Payment, unknown>[]}
-            data={payments}
+            data={shown}
             loading={loading}
             emptyMessage="No payments found."
             exportConfig={{

@@ -16,6 +16,7 @@ import { ArrowUpDownIcon, PencilIcon, Trash2Icon, EyeIcon, PrinterIcon, CopyIcon
 import { toast } from "sonner"
 
 import { useConfirm } from "@/components/confirm-dialog"
+import { useActiveFinancialYear, filterByFinancialYear } from "@/lib/use-financial-year"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -82,6 +83,8 @@ export default function JavakPage() {
   const [deletingId, setDeletingId] = React.useState<number | null>(null)
   const [sorting, setSorting] = React.useState<SortingState>([])
   const [globalFilter, setGlobalFilter] = React.useState("")
+  const fy = useActiveFinancialYear()
+  const shown = React.useMemo(() => filterByFinancialYear(javaks, "inv_date", fy), [javaks, fy])
 
   React.useEffect(() => {
     fetch("/api/javaks")
@@ -120,7 +123,7 @@ export default function JavakPage() {
   }
 
   function handleCopy() {
-    const text = javaks
+    const text = shown
       .map((j, i) => `${i + 1}\t${j.type}\t${fmtDate(j.inv_date)}\t${j.invoice_no}\t${j.party}\t${j.fine}\t${j.labour}`)
       .join("\n")
     navigator.clipboard.writeText(`#\ttype\tDate\tInvoice No\tM/s\tFine\tLabour\n${text}`)
@@ -129,7 +132,7 @@ export default function JavakPage() {
 
   function handleExcel() {
     const header = "#,type,Date,Invoice No,M/s,Fine,Labour"
-    const rows = javaks.map(
+    const rows = shown.map(
       (j, i) => `${i + 1},${j.type},${fmtDate(j.inv_date)},${j.invoice_no},"${j.party}",${j.fine},${j.labour}`,
     )
     const csv = [header, ...rows].join("\n")
@@ -253,7 +256,7 @@ export default function JavakPage() {
   ]
 
   const table = useReactTable({
-    data: javaks,
+    data: shown,
     columns,
     state: { sorting, globalFilter },
     onSortingChange: setSorting,
