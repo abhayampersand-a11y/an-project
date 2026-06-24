@@ -18,9 +18,8 @@ type PartySelectProps = {
 }
 
 /**
- * Party picker backed by /api/parties. Every option shows the party type in
- * parentheses, e.g. "Ramesh (Vepari)", while the value passed to/from the
- * parent stays the plain party name (what the database stores).
+ * Party picker backed by /api/parties. Lists plain party names; pass
+ * `onlyVepari` to restrict the list to parties whose type is "Vepari".
  */
 export function PartySelect({
   value,
@@ -31,35 +30,26 @@ export function PartySelect({
   className,
   disabled,
 }: PartySelectProps) {
-  const [parties, setParties] = React.useState<{ name: string; type: string }[]>([])
+  const [options, setOptions] = React.useState<string[]>([])
 
   React.useEffect(() => {
     fetch("/api/parties")
       .then((r) => r.json())
       .then((d: PartyApiRow[]) => {
         if (!Array.isArray(d)) return
-        const list = d
-          .filter((p) => !onlyVepari || String(p.party_type).toLowerCase() === "vepari")
-          .map((p) => ({ name: p.party_name, type: p.party_type }))
-        setParties(list)
+        setOptions(
+          d
+            .filter((p) => !onlyVepari || String(p.party_type).toLowerCase() === "vepari")
+            .map((p) => p.party_name),
+        )
       })
       .catch(() => {})
   }, [onlyVepari])
 
-  const options = React.useMemo(() => parties.map((p) => `${p.name} (${p.type})`), [parties])
-  const labelToName = React.useMemo(
-    () => new Map(parties.map((p) => [`${p.name} (${p.type})`, p.name])),
-    [parties],
-  )
-  const nameToLabel = React.useMemo(
-    () => new Map(parties.map((p) => [p.name, `${p.name} (${p.type})`])),
-    [parties],
-  )
-
   return (
     <SearchableSelect
-      value={nameToLabel.get(value) ?? value}
-      onValueChange={(v) => onValueChange(labelToName.get(v) ?? v)}
+      value={value}
+      onValueChange={onValueChange}
       options={options}
       placeholder={placeholder}
       emptyText={emptyText}

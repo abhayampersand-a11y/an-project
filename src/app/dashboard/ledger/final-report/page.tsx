@@ -112,8 +112,8 @@ export default function FinalReportPage() {
                 <TableRow className="font-semibold">
                   <TableCell className="py-2" />
                   <TableCell className="py-2">total</TableCell>
-                  <TableCell className="py-2">{round(totalFine)} {tag(totalFine)}</TableCell>
-                  <TableCell className="py-2">{round(totalAmount)} {tag(totalAmount)}</TableCell>
+                  <TableCell className="py-2">F. {round(totalFine)} {tag(totalFine)}</TableCell>
+                  <TableCell className="py-2">&#8377; {round(totalAmount)} {tag(totalAmount)}</TableCell>
                 </TableRow>
               </TableFooter>
             )}
