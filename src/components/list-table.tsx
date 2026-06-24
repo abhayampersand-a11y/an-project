@@ -160,7 +160,7 @@ export function ListTable<T>({
       </div>
 
       {/* table */}
-      <div className="overflow-hidden rounded border">
+      <div className="overflow-x-auto rounded border">
         <Table>
           <TableHeader className="bg-muted">
             {table.getHeaderGroups().map((hg) => (

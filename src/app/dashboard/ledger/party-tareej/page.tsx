@@ -7,7 +7,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { SearchableSelect } from "@/components/searchable-select"
+import { PartySelect } from "@/components/party-select"
 import { useFinancialYearRange } from "@/lib/use-financial-year"
 
 type Entry = { date: string; invoice: string; fine: number; amount: number; remark: string }
@@ -41,18 +41,10 @@ const inr = (v: number) => v.toLocaleString("en-IN")
 const bal = (v: number) => `${Math.abs(v).toLocaleString("en-IN")} ${v >= 0 ? "cr" : "db"}`
 
 export default function PartyTareejPage() {
-  const [parties, setParties] = React.useState<string[]>([])
   const [party, setParty] = React.useState("")
   const { from, setFrom, to, setTo } = useFinancialYearRange("2025-10-22", todayISO())
   const [loading, setLoading] = React.useState(false)
   const [stmt, setStmt] = React.useState<Statement | null>(null)
-
-  React.useEffect(() => {
-    fetch("/api/parties")
-      .then((r) => r.json())
-      .then((d) => { if (Array.isArray(d)) setParties(d.map((p) => p.party_name)) })
-      .catch(() => {})
-  }, [])
 
   async function handleCheck() {
     if (!party) {
@@ -84,12 +76,11 @@ export default function PartyTareejPage() {
         <div className="grid items-end gap-5 md:grid-cols-[1fr_1fr_auto]">
           <div className="flex flex-col gap-2">
             <Label className="text-sm">Party <span className="text-destructive">*</span></Label>
-            <SearchableSelect
+            <PartySelect
               value={party}
               onValueChange={setParty}
-              options={parties}
+              onlyVepari
               placeholder="Select party"
-              emptyText="No parties"
               className="w-full"
             />
           </div>

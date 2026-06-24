@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { BalanceInput } from "@/components/balance-input"
-import { SearchableSelect } from "@/components/searchable-select"
+import { PartySelect } from "@/components/party-select"
 import {
   Select,
   SelectContent,
@@ -60,16 +60,11 @@ function AavakAddPage() {
 
   const [items, setItems] = React.useState<ItemRow[]>([emptyItem()])
 
-  const [parties, setParties] = React.useState<string[]>([])
   const [itemNames, setItemNames] = React.useState<string[]>([])
   const [saving, setSaving] = React.useState(false)
 
   // ── load reference data ──
   React.useEffect(() => {
-    fetch("/api/parties")
-      .then((r) => r.json())
-      .then((d) => { if (Array.isArray(d)) setParties(d.map((p) => p.party_name)) })
-      .catch(() => {})
     fetch("/api/items")
       .then((r) => r.json())
       .then((d) => { if (Array.isArray(d)) setItemNames(d.map((it) => it.item_name)) })
@@ -209,12 +204,11 @@ function AavakAddPage() {
         <div className="grid gap-5 md:grid-cols-2">
           <div className="grid grid-cols-[110px_1fr] items-center gap-3">
             <Label className="text-sm">Party</Label>
-            <SearchableSelect
+            <PartySelect
               value={party}
               onValueChange={setParty}
-              options={parties}
+              onlyVepari
               placeholder="Select party"
-              emptyText="No parties"
               className="w-full"
             />
           </div>

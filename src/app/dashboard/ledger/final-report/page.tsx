@@ -10,6 +10,7 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
@@ -39,6 +40,9 @@ export default function FinalReportPage() {
   const shown = filter
     ? rows.filter((r) => r.party.toLowerCase().includes(filter.toLowerCase()))
     : rows
+
+  const totalFine = shown.reduce((s, r) => s + r.fine, 0)
+  const totalAmount = shown.reduce((s, r) => s + r.amount, 0)
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-6 md:p-6">
@@ -103,6 +107,16 @@ export default function FinalReportPage() {
                 ))
               )}
             </TableBody>
+            {!loading && shown.length > 0 && (
+              <TableFooter className="bg-muted">
+                <TableRow className="font-semibold">
+                  <TableCell className="py-2" />
+                  <TableCell className="py-2">total</TableCell>
+                  <TableCell className="py-2">{round(totalFine)} {tag(totalFine)}</TableCell>
+                  <TableCell className="py-2">{round(totalAmount)} {tag(totalAmount)}</TableCell>
+                </TableRow>
+              </TableFooter>
+            )}
           </Table>
         </div>
       </div>

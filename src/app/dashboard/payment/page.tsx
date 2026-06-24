@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { SearchableSelect } from "@/components/searchable-select"
+import { PartySelect } from "@/components/party-select"
 
 type Payment = {
   id: number
@@ -54,7 +54,6 @@ export default function PaymentPage() {
   const confirm = useConfirm()
   const [payments, setPayments] = React.useState<Payment[]>([])
   const [loading, setLoading] = React.useState(true)
-  const [parties, setParties] = React.useState<string[]>([])
   const [form, setForm] = React.useState(emptyForm())
   const [editingId, setEditingId] = React.useState<number | null>(null)
   const [saving, setSaving] = React.useState(false)
@@ -71,13 +70,6 @@ export default function PaymentPage() {
       })
       .catch((err) => toast.error(err instanceof Error ? err.message : "Failed to load payments"))
       .finally(() => setLoading(false))
-
-    fetch("/api/parties")
-      .then((r) => r.json())
-      .then((data) => {
-        if (Array.isArray(data)) setParties(data.map((p) => p.party_name))
-      })
-      .catch(() => {})
   }, [])
 
   function startEdit(p: Payment) {
@@ -296,12 +288,10 @@ export default function PaymentPage() {
             </div>
 
             <Field label="party" required>
-              <SearchableSelect
+              <PartySelect
                 value={form.party}
                 onValueChange={(v) => setForm((f) => ({ ...f, party: v }))}
-                options={parties}
                 placeholder="None"
-                emptyText="No parties"
                 className="w-full"
               />
             </Field>

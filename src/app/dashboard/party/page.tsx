@@ -350,7 +350,7 @@ export default function PartyPage() {
         </div>
 
         {/* ── RIGHT: table ── */}
-        <div className="flex-1">
+        <div className="min-w-0 flex-1">
           <ListTable
             columns={columns as ColumnDef<Party, unknown>[]}
             data={parties}
