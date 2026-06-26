@@ -91,8 +91,18 @@ function AavakAddPage() {
         setParty(d.party ?? "")
         setInvDate(d.inv_date ?? todayISO())
         setRemark(d.remark ?? "")
-        setPreviousAmount(String(d.previous_amount ?? "0"))
-        setPreviousFine(String(d.previous_fine ?? "0"))
+        // Previous balance = opening + everything dated before this entry, so
+        // the party's opening fine/amount always carries through as the dr.
+        try {
+          const pr = await fetch(
+            `/api/ledger/last?party=${encodeURIComponent(d.party ?? "")}&before=${encodeURIComponent(d.inv_date ?? "")}`,
+          ).then((r) => r.json())
+          setPreviousAmount(String(pr.previous_amount ?? d.previous_amount ?? 0))
+          setPreviousFine(String(pr.previous_fine ?? d.previous_fine ?? 0))
+        } catch {
+          setPreviousAmount(String(d.previous_amount ?? "0"))
+          setPreviousFine(String(d.previous_fine ?? "0"))
+        }
         setRoundoffFine(String(d.roundoff_fine ?? "0"))
         setRoundoffAmount(String(d.roundoff_amount ?? "0"))
         const loaded: ItemRow[] = Array.isArray(d.items) && d.items.length
