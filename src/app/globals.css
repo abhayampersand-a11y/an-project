@@ -8,8 +8,8 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-heading: var(--font-heading);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -84,6 +84,11 @@
   --sidebar-accent-foreground: oklch(0.97 0.01 255);
   --sidebar-border: oklch(0.42 0.035 266 / 45%);
   --sidebar-ring: oklch(0.62 0.19 275);
+  /* Semantic font families. The theme customizer overrides these to point at
+     any of the font variables loaded in the root layout. */
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-inter);
+  --font-mono: var(--font-geist-mono);
 }
 
 .dark {
